@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Boring programmer's notes</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link rel="stylesheet" href="./styles/main.css">
+    <script type="text/javascript" src="./js/jquery.js"></script>
+    <script>
+        $(document).ready(function () {
+            var bh = $("div.index-post-list").height();
+            var th = $("div.small-post-list").height();
+            var mh = bh > th ? bh : th;
+            $("div.index-post-list").height(mh);
+            $("div.small-post-list").height(mh);
+        });
+    </script>
+</head>
+<body>
+    <div class="content">
+        <div class="header">
+            <h1>Boring programmer's notes</h1>
+        </div>
+        <div class="menu">
+            <a href="./index.html">Home</a>
+            <a href="./posts.html">All posts</a>
+        </div>
+        <div class="container">
+<div>
+<a class="post-link" href="./posts/2012/09/19/first-page.html">First page</a> — <span class="post-date">2012-09-19</span>
+
+<div>
+
+        </div>
+        <div class="footer">
+            Copyright © 2012 Vladimir Matveev
+            <br>
+            Generated with <a href="http://jaspervdj.be/hakyll/">hakyll</a>
+        </div>
+    </div>
+</body>
+</html>
