@@ -94,7 +94,7 @@ main = hakyll $ do
         posts = do
             route $ setExtension "html"
             compile $ pageCompilerWith parserState writerOptions
-                >>> arr (copyBodyToField "content")   -- Save body to metadata to extract it in other pages
+                >>> arr (copyBodyToField "postContent")   -- Save body to metadata to extract it in other pages
                 >>> applyTemplateCompiler "templates/post.html"
                 >>> applyTemplateCompiler "templates/default.html"
                 >>> relativizeUrlsCompiler
@@ -114,6 +114,7 @@ main = hakyll $ do
         indexFile = constA mempty
             >>> indexFields
             >>> applyTemplateCompiler "templates/index.html"
+            >>> applyTemplateCompiler "templates/default.html"
             >>> relativizeUrlsCompiler
 
         indexFields = smallRecentPostsList 
@@ -123,7 +124,8 @@ main = hakyll $ do
 
         postsFile = constA mempty
             >>> postsFields
-            >>> applyTemplateCompiler "templates/index.html"
+            >>> applyTemplateCompiler "templates/posts.html"
+            >>> applyTemplateCompiler "templates/default.html"
             >>> relativizeUrlsCompiler
 
         postsFields = fullPostsList
