@@ -123,10 +123,11 @@ main = hakyll $ do
 
         postsFile = constA mempty
             >>> postsFields
-            >>> applyTemplateCompiler "templates/posts.html"
+            >>> applyTemplateCompiler "templates/index.html"
             >>> relativizeUrlsCompiler
 
         postsFields = fullPostsList
+            >>> smallRecentPostsList
 
         --- Different post lists
 

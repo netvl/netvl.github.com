@@ -1,5 +1,26 @@
+html, body {
+}
+
 body {
     font-family: sans;
+    font-size: 85%;
+    background-color: #FFFFEF;
+}
+
+div {
+    /*border: solid 1px black;*/
+}
+
+a {
+    color: #303030;
+}
+
+a:hover {
+    color: #909090;
+}
+
+a:visited {
+    color: #606060;
 }
 
 div.content {
@@ -8,8 +29,19 @@ div.content {
     width: 800px;
 }
 
-div {
-    border: solid 1px black;
+div.menu {
+    margin-top: 8px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #9F9F9F;
+    border-top: 1px solid #9F9F9F;
+    padding-bottom: 3px;
+}
+
+.menu a {
+    margin-right: 8px;
+}
+
+div.container {
 }
 
 div.index-post-list {
@@ -19,10 +51,20 @@ div.index-post-list {
 
 div.small-post-list {
     overflow: hidden;
+    /*background-color: #EFEFDF;   */
+    padding: 4px;
+    padding-left: 6px;
+    border-left: 1px solid #9F9F9F;
+/*    border-radius: 4px;
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+*/
 }
 
 div.footer {
-    margin-top: 50px;
+    border-top: 1px solid #9F9F9F;
+    padding-top: 5px;
+    margin-top: 10px;
     text-align: center;
     font-size: 80%;
 }
@@ -30,6 +72,7 @@ div.footer {
 .menu-header {
     font-weight: bold;
     margin-bottom: 5px;
+    text-align: center;
 }
 
 .clear {
@@ -39,4 +82,8 @@ div.footer {
 .title-field {
     margin-top: 2px;
     margin-bottom: 2px;
+}
+
+.date-field {
+    font-size: 80%;
 }
