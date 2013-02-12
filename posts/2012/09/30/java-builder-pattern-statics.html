@@ -24,12 +24,16 @@
         <div class="menu">
             <a href="../../../../index.html">Home</a>
             <a href="../../../../posts.html">All posts</a>
+            <a href="../../../../tags.html">All tags</a>
         </div>
         <div class="container">
 <div class="post-body">
     <h1 class="title-field">Builder pattern in Java using static methods</h1>
-    <div class="date-field">30/09/2012</div>
-    <p>As you possibly know, Java as a language is not very expressive. However, using its some not very known features it is possible to implement some useful patterns, one of them being <em>builder</em>.</p>
+    <div class="date-tags-container">
+      <div class="date-field">30/09/2012</div><div class="tags-field"><a class="tag-small" href="../../../../tags/java.html">java</a>, <a class="tag-small" href="../../../../tags/patterns.html">patterns</a>, <a class="tag-small" href="../../../../tags/programming.html">programming</a></div>
+    </div>
+    <div>
+<p>As you possibly know, Java as a language is not very expressive. However, using its some not very known features it is possible to implement some useful patterns, one of them being <em>builder</em>.</p>
 <p>Java users usually understand the following construction under Builder.</p>
 <pre class="sourceCode java"><code class="sourceCode java">SomeComplexObject object =
     <span class="kw">new</span> <span class="fu">SomeComplexObjectBuilder</span>()
@@ -143,11 +147,12 @@
 <p>Now it is possible to use <code>XMLBuilder</code>’s methods just like if they were static methods in current class (or even global functions, using C++ terms).</p>
 <p>I’m absolutely sure that I’m not the first who came up with this idea, but I couldn’t find implementations of such or similar patterns in open source libraries or programs. It is possible that this is so because of performance reasons. Obviously, building an object in this way involves construction of several other objects, and it is certainly quickier to simply invoke constructor.</p>
 <p>However, there are not that many extra objects are created, and since they are short-lived, they will be quickly taken out by Java generational garbage collector. I think it is perfectly reasonable to use this approach if you want to get readable code.</p>
+    </div>
 </div>
 
         </div>
         <div class="footer">
-            Copyright © 2012 Vladimir Matveev
+            Copyright © 2012-2013 Vladimir Matveev
             <br>
             Generated with <a href="http://jaspervdj.be/hakyll/">hakyll</a>
         </div>
