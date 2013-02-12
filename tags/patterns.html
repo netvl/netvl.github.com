@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Boring programmer's notes</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="../styles/hk-pyg.css">
+    <script type="text/javascript" src="../js/jquery.js"></script>
+    <script>
+        $(document).ready(function () {
+            var bh = $("div.index-post-list").height();
+            var th = $("div.small-post-list").height();
+            var mh = bh > th ? bh : th;
+            $("div.index-post-list").height(mh);
+            $("div.small-post-list").height(mh);
+        });
+    </script>
+</head>
+<body>
+    <div class="content">
+        <div class="header">
+            <h1>Boring programmer's notes</h1>
+        </div>
+        <div class="menu">
+            <a href="../index.html">Home</a>
+            <a href="../posts.html">All posts</a>
+            <a href="../tags.html">All tags</a>
+        </div>
+        <div class="container">
+<h2 class="small-title-field">Posts tagged patterns</h2>
+<div>
+<div class="link-small-div"><span class="date-small">30/09/2012</span> <a class="post-link-small" href="../posts/2012/09/30/java-builder-pattern-statics.html">Builder pattern in Java using static methods</a> <a class="tag-small" href="../tags/java.html">java</a>, <a class="tag-small" href="../tags/patterns.html">patterns</a>, <a class="tag-small" href="../tags/programming.html">programming</a></div>
+
+<div>
+
+        </div>
+        <div class="footer">
+            Copyright © 2012-2013 Vladimir Matveev
+            <br>
+            Generated with <a href="http://jaspervdj.be/hakyll/">hakyll</a>
+        </div>
+    </div>
+</body>
+</html>
