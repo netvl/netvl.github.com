@@ -195,13 +195,14 @@
 </tr>
 </tbody>
 </table>
-<p><code>@Pop*</code> annotations change <code>Stacks</code> state. This object is queried exactly in the order of stack-manipulating annotations. For example, the following annotated action:</p>
+<p>Any other parameter type/annotation combination is illegal, and corresponding exception will be thrown at configuration time.</p>
+<p><code>@Pop*</code> annotations change <code>Stacks</code> state. This object is queried exactly in the order of parameters annotated with stack-manipulating annotations. For example, the following annotated action:</p>
 <pre class="sourceCode java"><code class="sourceCode java">@<span class="fu">Before</span>(...)
 <span class="kw">public</span> <span class="dt">void</span> <span class="fu">action</span>(@Pop String value1, @Pop <span class="dt">int</span> value2, @Peek <span class="dt">boolean</span> value3,
                    @Pop <span class="dt">boolean</span> value4) {
     ...
 }</code></pre>
-<p>Is equivalent to the following direct stack manipulation:</p>
+<p>Is equivalent to the this direct stack manipulation:</p>
 <pre class="sourceCode java"><code class="sourceCode java">@<span class="fu">Before</span>(...)
 <span class="kw">public</span> <span class="dt">void</span> <span class="fu">action</span>(Stacks stacks) {
     String value1 = stacks.<span class="fu">pop</span>();
@@ -210,7 +211,7 @@
     <span class="dt">boolean</span> value4 = stacks.<span class="fu">pop</span>();
     ...
 }</code></pre>
-<p>It should be obvious that writing parameters annotated with <code>@Peek</code> annotation for the same stack several times in a row is pointless, since they all will have the same value. On the other hand, several <code>@Pop</code>-annotated parameters is perfectly OK.</p>
+<p>It should be obvious that writing parameters annotated with <code>@Peek</code> annotation for the same stack several times in a row is pointless, since they all will have the same value. On the other hand, having several <code>@Pop</code>-annotated parameters is perfectly OK.</p>
 <h2 id="example">Example</h2>
 <p>Here is a quick example. Suppose you have the following XML document:</p>
 <pre class="sourceCode xml"><code class="sourceCode xml"><span class="kw">&lt;persons&gt;</span>
