@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Devourer library</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="../styles/hk-pyg.css">
+    <script type="text/javascript" src="../js/jquery.js"></script>
+    <script>
+        $(document).ready(function () {
+            var bh = $("div.index-post-list").height();
+            var th = $("div.small-post-list").height();
+            var mh = bh > th ? bh : th;
+            $("div.index-post-list").height(mh);
+            $("div.small-post-list").height(mh);
+        });
+    </script>
+</head>
+<body>
+    <div class="content">
+        <div class="header">
+            <h1>Devourer library</h1>
+        </div>
+        <div class="menu">
+            <a href="../index.html">Home</a>
+            <a href="../posts.html">All posts</a>
+            <a href="../tags.html">All tags</a>
+            <a href="../devourer/overview.html">Devourer library</a>
+        </div>
+        <div class="container">
+<div class="post-body">
+  <h1 class="title-field">Devourer overview</h1>
+  <div class="date-tags-container">
+      23/02/2013 <span style="display: inline-block; width: 1em"></span>
+      manual vesion: 1 <span style="display: inline-block; width: 1em"></span>
+      devourer version: 0.1
+  </div>
+  <div>
+<p>This document is an official manual for <strong>Devourer XML processing library</strong>. This page will be updated with the changes in new releases of the library.</p>
+<p>Devourer is a library for streaming XML processing. It is a wrapper around StAX parsing library providing easy-to-use mechanism to configure actions which should be executed on certain elements inside an XML document. These actions can do anything with the data they receive, e.g. construct new objects. To hold intermediate state stack data structure is used.</p>
+<p>Devourer is very simple to use. First you create and configure an instance of <code>Devourer</code> class and then you feed it an XML document. Devourer accepts <code>InputStream</code>s, <code>Reader</code>s, byte arrays and strings. After parsing it produces <code>Stacks</code> object which contains results of the processing.</p>
+<p>Devourer’s source code can be found at Bitbucket: <a href="https://bitbucket.org/googolplex/devourer">https://bitbucket.org/googolplex/devourer</a>. Binary release will be available soon at Maven Central:</p>
+<pre class="sourceCode xml"><code class="sourceCode xml"><span class="kw">&lt;dependency&gt;</span>
+    <span class="kw">&lt;groupId&gt;</span>org.bitbucket.googolplex.devourer<span class="kw">&lt;/groupId&gt;</span>
+    <span class="kw">&lt;artifactId&gt;</span>devourer<span class="kw">&lt;/artifactId&gt;</span>
+    <span class="kw">&lt;version&gt;</span>0.1<span class="kw">&lt;/version&gt;</span>
+<span class="kw">&lt;/dependency&gt;</span></code></pre>
+<h2 id="inspirations">Inspirations</h2>
+<p>Devourer is heavily influenced by <a href="http://commons.apache.org/digester/">Apache Commons Digester</a>. In fact, it does the same work as Digester, but there are some differences.</p>
+<p>First, Devourer is based on StAX library instead of SAX. This leads to much cleaner and easier to support parsing code, as well as nearly effortless thread safety. StAX provides so-called ‘pull’ parser, as opposed to SAX ‘push’ parser. The difference is that in SAX <strong>the parser</strong> invokes callbacks provided by you when it reaches certain XML entities, while with the StAX parser <strong>you</strong> advance the parser manually using iterator-like syntax. StAX parser allows writing much cleaner code because it gives more control over parsing process. Since you call its <code>next()</code> method manually, it is possible to run all XML processing inside a single method call, thus removing the need to hold intermediate state inside object fields. This works very nicely with concurrency.</p>
+<p>In fact, Devourer provides a SAX-like API in the sense that it relies on callbacks too; however, Devourer’s callbacks are intended to be single-purpose and much lighter; they also do not have internal state and instead work with state container provided by Devourer.</p>
+<p>Second, Devourer does not use reflection (well, almost, but it is optional), it relies on callbacks defined as anonymous classes implementing certain interfaces instead. Not only this removes performance hit of reflection; the action interfaces are designed to integrate nicely with Java 8 Lambda extensions. Action interfaces are <strong>functional interfaces</strong> in term of Java 8; this means that <strong>lambda expressions</strong> can be used anywhere where they are expected. Because of this it is possible to define actions using very clean, terse and understandable syntax, while not sacrificing performance. Reflection is used in another variant of configuration based on annotations. It is optional, but it still can be useful because of its readability.</p>
+<p>Third, Devourer has minimum amount of runtime dependencies. It only depend on <a href="http://code.google.com/p/guava-libraries/">Google Guava</a> library, which it uses rather heavily. Guava provides various utilities including immutable collections, I/O helpers, preconditions, Optional etc. Guava encourages modern programming style including usage of immutable collections and null-hostility. Devourer is created using these principles, and I believe they make the code much easier to write and support.</p>
+<p>I see above points as advantages of Devourer over Digester. However, Digester still may be preferrable for you. Digester is much more mature project. Its configuration may be somewhat easier to understand than Devourer annotation configuration and certainly is easier than Devourer modular configuration (at least on Java &lt; 8 and when not using IDE folding). Its reflection-based rules integrate nicely with JavaBean convention. Digester supports loading rules from XML files, which allows dynamic reconfiguration of the parsing process (Devourer may support something like this one day). Digester (at least v3) supports plugins, which are used to dynamically reconfigure digesting rules during the processing. Digester support for XML namespaces is much better than Devourer’s (this is something I will try to fix in the nearest future). Digester’s API is stable; Devourer’s API will evolve, at least during first several versions.</p>
+<h2 id="devourer-workflow-overview-basic-concepts">Devourer workflow overview, basic concepts</h2>
+<h3 id="paths">Paths</h3>
+<p>As I said, Devourer is a tool for XML processing. Essentially it is a wrapper over streaming XML parser which can be configured to execute arbitrary code (each piece of which is called <strong>action</strong>) on elements of an XML document. This code usually constructs some Java object, though it is not required. Actions are set to be executed on elements using these elements’ <strong>path</strong> inside the document tree. A path which Devourer uses is similar to XPath expression, though much simpler. It looks like conventional path inside Unix filesystem: <code>/path/to/node</code>. For example, in the following document:</p>
+<pre class="sourceCode xml"><code class="sourceCode xml"><span class="kw">&lt;root&gt;</span>
+  <span class="kw">&lt;subtree&gt;</span>
+    <span class="kw">&lt;node&gt;</span>
+      <span class="kw">&lt;name&gt;</span>Abcd<span class="kw">&lt;/name&gt;</span>
+    <span class="kw">&lt;/node&gt;</span>
+  <span class="kw">&lt;/subtree&gt;</span>
+<span class="kw">&lt;/root&gt;</span></code></pre>
+<p>the most inner element <code>&lt;name&gt;</code> will be located at <code>/root/subtree/node/name</code> path.</p>
+<p>The path should be declared without XML namespace prefixes. Devourer will not handle qualified names in the path correctly. Namespaces support is somewhat lacking in the Devourer currently; I intend to fix this in the nearest versions.</p>
+<p>The path can match multiple nodes in the document, like in the following piece:</p>
+<pre class="sourceCode xml"><code class="sourceCode xml"><span class="kw">&lt;root&gt;</span>
+  <span class="kw">&lt;subtree&gt;</span>
+    <span class="kw">&lt;node&gt;</span>foo bar<span class="kw">&lt;/node&gt;</span>
+  <span class="kw">&lt;/subtree&gt;</span>
+  <span class="kw">&lt;subtree&gt;</span>
+    <span class="kw">&lt;node&gt;</span>baz boo<span class="kw">&lt;/node&gt;</span>
+    <span class="kw">&lt;node&gt;</span>woo zoo<span class="kw">&lt;/node&gt;</span>
+  <span class="kw">&lt;/subtree&gt;</span>
+<span class="kw">&lt;/root&gt;</span></code></pre>
+<p>There are exactly three elements which match <code>/root/subtree/node</code> path and two elements which match <code>/root/subtree</code> path. If some actions are configured on these paths, they will be executed one time for each one of the corresponding elements.</p>
+<h3 id="stacks">Stacks</h3>
+<p>To assist actions in holding their state, for example, parts of the object being constructed, Devourer provides <code>Stacks</code> object. <code>Stacks</code> is a collection of stacks (which is not hard to infer). <code>Stacks</code> interface provides an access to a number of stacks using their names. It also provides direct access to some default stack. This is simply a shortcut to access default stack by its name, <code>&quot;main&quot;</code>. Stacks are created on the first access to them, so it is possible to have arbitrary amount of them.</p>
+<p>Actions should use <code>Stacks</code> to store their intermediate state. The single <code>Stacks</code> instance is not reused by Devourer in separate parsing processes, which means that if you hold all the state you need inside <code>Stacks</code>, your actions will be completely thread-safe.</p>
+<p>Devourer returns <code>Stacks</code> object as a result of the parsing process, so if you need to return some object from the actions to your application code, use <code>Stacks</code>. Note, however, that default implementation of <code>Stacks</code> interface is not thread-safe by itself. This is not a problem for the Devourer since it never uses single instance of <code>Stacks</code> from multiple threads, but because it is returned from the <code>parse()</code> method to your code, you should know that using it from multiple threads is a bad idea.</p>
+<h3 id="action-types">Action types</h3>
+<p>XML has fairly complex structure when you look into its details, but Devourer tries to abstract all these details into three types of events you can encounter. These types of events correspond to three types of actions Devourer support.</p>
+<p>These types define when the given action will be executed in regard to the XML element. These types are <strong>before-actions</strong>, <strong>at-actions</strong> and <strong>after-actions</strong>. This scheme mirrors the one of Digester.</p>
+<p><em>Before-actions</em> are executed when the start tag of the element is encountered. In Digester terminology such actions are implemented using <code>begin()</code> method of <code>Rule</code> class. These actions are suitable for the preparation of objects builders or objects themselves; it is also reasonable to check element attributes here.</p>
+<p><em>At-actions</em> are executed when the textual content of the element is encountered. In Digester terminology such actions are implemented using <code>body()</code> method of <code>Rule</code> class. These actions are needed to retrieve text from the XML elements. Note that because of the way streaming parsers work these actions could be invoked multiple times for the same element if this element’s body is a mix of text nodes and other elements, like in the following example:</p>
+<pre class="sourceCode xml"><code class="sourceCode xml"><span class="kw">&lt;root&gt;</span>
+  some text
+  <span class="kw">&lt;inner&gt;</span>
+    inner text
+  <span class="kw">&lt;/inner&gt;</span>
+  another text
+<span class="kw">&lt;/root&gt;</span></code></pre>
+<p>In case at-action has been configured on <code>/root</code> element, it will be invoked twice, first for <code>some text</code> piece, second for <code>another text</code> piece.</p>
+<p>It also should be noted that at-actions will not be invoked if the content consists entirely of whitespace. It is also possible to tweak leading and trailing whitespaces handling by the means of Devourer configuration.</p>
+<p><em>After-actions</em> are executed when the end tag of the element is encountered. In Digester terminology such actions are implemented using <code>end()</code> element of <code>Rule</code> class. These actions are used to construct final version of the objects.</p>
+<p>All actions have access to <code>Stacks</code> object and <code>AttributeContext</code> object. <code>Stacks</code> object is described above. <code>AttributeContext</code> (the name may be changed in future versions) is an object which provides an access to current element parameters: element name and namespace and element attributes. Usually you use <code>AttributeContext</code> to read element attributes.</p>
+<p>At-actions also are provided with element content represented as <code>String</code>.</p>
+<h2 id="configuration">Configuration</h2>
+<p>Configuration of Devourer is done using an object of certain kind. Configuration object defines a mapping from paths inside XML document to series of actions which should be executed on the nodes which are located at the specified path. There are two variants of configuration objects, equivalent in power but different in usage: <em>modules</em> and <em>annotated objects</em>.</p>
+<h3 id="modular-configuration">Modular configuration</h3>
+<p>Modular configuration looks like <a href="http://code.google.com/p/google-guice/">Google Guice</a> or Digester modules. It provides very lightweight DSL to help you define actions which should be taken on different nodes of the document. It is designed in such way that it is compatible with Java 8 Lambda extension; moreover, modern IDEs (e.g. IntelliJ IDEA) can fold anonymous classes into something highly resembling lambdas, so configuration modules look fairly lean and straightforward, without sacrificing effectiveness of direct code invocation (opposite to reflective calls of Digester). This is the preferred method of configuration.</p>
+<p>Modular configuration is usually defined by extending <code>AbstractMappingModule</code> class, though nothing prevents you from implementing <code>MappingModule</code> interface directly. <code>AbstractMappingModule</code> has single method, <code>configure()</code>, which is invoked by Devourer to configure mappings. It looks like this:</p>
+<pre class="sourceCode java"><code class="sourceCode java"><span class="kw">public</span> <span class="kw">class</span> ExampleModule <span class="kw">extends</span> AbstractMappingModule {
+    @Override
+    <span class="kw">public</span> <span class="dt">void</span> <span class="fu">configure</span>() {
+        <span class="fu">on</span>(&lt;path&gt;)
+            .<span class="fu">doBefore</span>(<span class="kw">new</span> <span class="fu">ActionBefore</span>() {
+                @Override
+                <span class="kw">public</span> <span class="dt">void</span> <span class="fu">act</span>(Stacks stacks, AttributesContext context) {
+                    &lt;before-action&gt;
+                }
+            })
+            .<span class="fu">doAt</span>(<span class="kw">new</span> <span class="fu">ActionAt</span>() {
+                @Override
+                <span class="kw">public</span> <span class="dt">void</span> <span class="fu">act</span>(Stacks stacks, AttributesContext context, String body) {
+                    &lt;at-action&gt;
+                }                    
+            })
+            .<span class="fu">doAfter</span>(<span class="kw">new</span> <span class="fu">ActionAfter</span>() {
+                @Override
+                <span class="kw">public</span> <span class="dt">void</span> <span class="fu">act</span>(Stacks stacks, AttributesContext context) {
+                    &lt;after-action&gt;
+                }
+             });
+
+        <span class="fu">on</span>(&lt;another-path&gt;)
+            .<span class="fu">doBefore</span>(...)
+            .<span class="fu">doAt</span>(...)
+            .<span class="fu">doAfter</span>(...);
+
+        ...
+    }
+}</code></pre>
+<p>You can see that the body of <code>configure()</code> method consists of several <code>on()</code> method invocations followed <code>doBefore()</code>, <code>doAt()</code> and <code>doAfter()</code> calls. These calls set up provided actions of corresponding type to be invoked on corresponding elements specified by paths in XML document.</p>
+<p>It should be noted that the order between different types of actions does not matter, that is, before-actions can safely go after after-actions (no pun intended).However, <em>inside</em> the group of actions of the same type defined on the same node the order <em>does</em> matter. It is guaranteed that such actions will be invoked <em>exactly in definition order</em> during the parsing process.</p>
+<p>It is also possible to add actions on the same path using multiple <code>on()</code> clauses. This does not have any special effects, and the configuration behave exactly as if these actions were defined in the same <code>on()</code> clause.</p>
+<h3 id="annotated-configuration">Annotated configuration</h3>
+<p>Devourer also supports annotated configuration, which is heavily inspired by Spring Web MVC controllers. A class can be annotated in such way that its methods will be regarded as actions. This approach to configuration does require some reflection to be used during parsing process, so the modular approach should be preferred if you need as much performance as possible; however, annotated configuration is slightly more readable and understandable.</p>
+<p>An object of any class can be regarded as annotated configuration. However, the class of this object should be properly annotated for the configuration to work correctly.</p>
+<p>Annotated configuration class consists only of methods. These methods must be annotated at least with one of the following annotations: <code>@Before</code>, <code>@At</code>, <code>@After</code>. These annotations take single string argument which must be correct path inside the XML document. These annotations define the type of the action this method represents.</p>
+<p>If method has return type other than <code>void</code>, it is assumed that the result of this method should be pushed on the stack. <code>@PushTo</code> method annotation allows you to specify stack name explicitly. If <code>@PushTo</code> is not specified, default stack will be used.</p>
+<p>Annotated methods can have arbitrary number of parameters. During execution they will be injected with different objects depending on their types and annotations. The following table describes all possible variants of parameter types and annotation. In the table <code>T</code> means arbitrary type except the ones listed in the first part of the table.</p>
+<table>
+<col style="width: 42%" /><col style="width: 57%" /><thead>
+<tr class="header">
+<th style="text-align: left;">Parameter type (possibly w/ annotation)</th>
+<th style="text-align: left;">Description of the injected value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><p><code>Stacks</code></p></td>
+<td style="text-align: left;"><p>Current stacks object</p></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><p><code>AttributeContext</code> / <code>ElementContext</code></p></td>
+<td style="text-align: left;"><p>Current element context</p></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><p><code>String</code> (only in <code>@At</code> methods and not annotated with annotations described below)</p></td>
+<td style="text-align: left;"><p>Element textual content</p></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><p><code>@Pop T</code></p></td>
+<td style="text-align: left;"><p>An object from the top of the default stack; the object is removed from the stack; an exception is thrown if the stack is empty</p></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><p><code>@PopFrom(stackName) T</code></p></td>
+<td style="text-align: left;"><p>An object from the top of the specified stack; the object is removed from the stack; an exception is thrown if the stack is empty</p></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><p><code>@Peek T</code></p></td>
+<td style="text-align: left;"><p>An object from the top of the default stack; the object is kept on the stack; an exception is thrown if the stack is empty</p></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><p><code>@PeekFrom(stackName) T</code></p></td>
+<td style="text-align: left;"><p>An object from the top of the specified stack; the object is kept on the stack; an exception is thrown if the stack is empty</p></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><p><code>@Pop Optional&lt;T&gt;</code></p></td>
+<td style="text-align: left;"><p>An object from the top of the default stack; the object is removed from the stack; absent value is injected if the stack is empty</p></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><p><code>@PopFrom(stackName) Optional&lt;T&gt;</code></p></td>
+<td style="text-align: left;"><p>An object from the top of the specified stack; the object is removed from the stack; absent value is injected if the stack is empty</p></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><p><code>@Peek Optional&lt;T&gt;</code></p></td>
+<td style="text-align: left;"><p>An object from the top of the default stack; the object is kept on the stack; absent value is injected if the stack is empty</p></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><p><code>@PeekFrom(stackName) Optional&lt;T&gt;</code></p></td>
+<td style="text-align: left;"><p>An object from the top of the specified stack; the object is kept on the stack; absent value is injected if the stack is empty</p></td>
+</tr>
+</tbody>
+</table>
+<p><code>@Pop*</code> annotations change <code>Stacks</code> state. This object is queried exactly in the order of stack-manipulating annotations. For example, the following annotated action:</p>
+<pre class="sourceCode java"><code class="sourceCode java">@<span class="fu">Before</span>(...)
+<span class="kw">public</span> <span class="dt">void</span> <span class="fu">action</span>(@Pop String value1, @Pop <span class="dt">int</span> value2, @Peek <span class="dt">boolean</span> value3,
+                   @Pop <span class="dt">boolean</span> value4) {
+    ...
+}</code></pre>
+<p>Is equivalent to the following direct stack manipulation:</p>
+<pre class="sourceCode java"><code class="sourceCode java">@<span class="fu">Before</span>(...)
+<span class="kw">public</span> <span class="dt">void</span> <span class="fu">action</span>(Stacks stacks) {
+    String value1 = stacks.<span class="fu">pop</span>();
+    <span class="dt">int</span> value2 = stacks.<span class="fu">pop</span>();
+    <span class="dt">boolean</span> value3 = stacks.<span class="fu">peek</span>();
+    <span class="dt">boolean</span> value4 = stacks.<span class="fu">pop</span>();
+    ...
+}</code></pre>
+<p>It should be obvious that writing parameters annotated with <code>@Peek</code> annotation for the same stack several times in a row is pointless, since they all will have the same value. On the other hand, several <code>@Pop</code>-annotated parameters is perfectly OK.</p>
+<h2 id="example">Example</h2>
+<p>Here is a quick example. Suppose you have the following XML document:</p>
+<pre class="sourceCode xml"><code class="sourceCode xml"><span class="kw">&lt;persons&gt;</span>
+  <span class="kw">&lt;person</span><span class="ot"> id=</span><span class="st">&quot;1&quot;</span><span class="kw">&gt;</span>
+    <span class="kw">&lt;name&gt;</span>Foo Bar<span class="kw">&lt;/name&gt;</span>
+    <span class="kw">&lt;logins&gt;</span>
+      <span class="kw">&lt;login</span><span class="ot"> site=</span><span class="st">&quot;example.com&quot;</span><span class="kw">&gt;</span>foobar<span class="kw">&lt;/login&gt;</span>
+      <span class="kw">&lt;login</span><span class="ot"> site=</span><span class="st">&quot;example.org&quot;</span><span class="kw">&gt;</span>f.bar<span class="kw">&lt;/login&gt;</span>
+    <span class="kw">&lt;/logins&gt;</span>
+  <span class="kw">&lt;/person&gt;</span>
+  <span class="kw">&lt;person</span><span class="ot"> id=</span><span class="st">&quot;2&quot;</span><span class="kw">&gt;</span>
+    <span class="kw">&lt;name&gt;</span>Baz Boo<span class="kw">&lt;/name&gt;</span>
+    <span class="kw">&lt;logins&gt;</span>
+      <span class="kw">&lt;login</span><span class="ot"> site=</span><span class="st">&quot;uni.edu&quot;</span><span class="kw">&gt;</span>boo.baz<span class="kw">&lt;/login&gt;</span>
+    <span class="kw">&lt;/logins&gt;</span>
+  <span class="kw">&lt;/person&gt;</span>
+  <span class="kw">&lt;person</span><span class="ot"> id=</span><span class="st">&quot;4&quot;</span><span class="kw">&gt;</span>
+    <span class="kw">&lt;name&gt;</span>Fizz B. Jr<span class="kw">&lt;/name&gt;</span>
+  <span class="kw">&lt;/person&gt;</span>
+<span class="kw">&lt;/persons&gt;</span></code></pre>
+<p>You want to parse it into the list of objects of the following class:</p>
+<pre class="sourceCode java"><code class="sourceCode java"><span class="kw">public</span> <span class="kw">class</span> Person {
+    <span class="kw">public</span> <span class="dt">final</span> <span class="dt">int</span> id;
+    <span class="kw">public</span> <span class="dt">final</span> String name;
+    <span class="kw">public</span> <span class="dt">final</span> List&lt;Login&gt; logins;
+
+    <span class="kw">public</span> <span class="fu">Person</span>(<span class="dt">int</span> id, String name, List&lt;Login&gt; logins) {
+        <span class="kw">this</span>.<span class="fu">id</span> = id;
+        <span class="kw">this</span>.<span class="fu">name</span> = name;
+        <span class="kw">this</span>.<span class="fu">logins</span> = logins;
+    }
+}
+
+<span class="kw">public</span> <span class="kw">class</span> Login {
+    <span class="kw">public</span> <span class="dt">final</span> String site;
+    <span class="kw">public</span> <span class="dt">final</span> String value;
+
+    <span class="kw">public</span> <span class="fu">Login</span>(String site, String value) {
+        <span class="kw">this</span>.<span class="fu">site</span> = site;
+        <span class="kw">this</span>.<span class="fu">value</span> = value;
+    }
+}</code></pre>
+<p>Then the following actions mapping will do the work for you:</p>
+<pre class="sourceCode java"><code class="sourceCode java"><span class="kw">public</span> <span class="kw">class</span> PersonModule <span class="kw">extends</span> AbstractMappingModule {
+    @Override
+    <span class="kw">protected</span> <span class="dt">void</span> <span class="fu">configure</span>() {
+        <span class="fu">on</span>(<span class="st">&quot;/persons&quot;</span>)
+            .<span class="fu">doBefore</span>(<span class="kw">new</span> <span class="fu">ActionBefore</span>() {
+                @Override
+                <span class="kw">public</span> <span class="dt">void</span> <span class="fu">act</span>(Stacks stacks, AttributesContext context) {
+                    stacks.<span class="fu">push</span>(ImmutableList.<span class="fu">builder</span>());
+                }
+            })
+            .<span class="fu">doAfter</span>(<span class="kw">new</span> <span class="fu">ActionAfter</span>() {
+                @Override
+                <span class="kw">public</span> <span class="dt">void</span> <span class="fu">act</span>(Stacks stacks, AttributesContext context) {
+                    ImmutableList.<span class="fu">Builder</span>&lt;Person&gt; builder = stacks.<span class="fu">pop</span>();
+                    stacks.<span class="fu">push</span>(builder.<span class="fu">build</span>());
+                }
+            });
+
+        <span class="fu">on</span>(<span class="st">&quot;/persons/person&quot;</span>)
+            .<span class="fu">doBefore</span>(<span class="kw">new</span> <span class="fu">ActionBefore</span>() {
+                @Override
+                <span class="kw">public</span> <span class="dt">void</span> <span class="fu">act</span>(Stacks stacks, AttributesContext context) {
+                    stacks.<span class="fu">get</span>(<span class="st">&quot;person&quot;</span>).<span class="fu">push</span>(context.<span class="fu">attribute</span>(<span class="st">&quot;id&quot;</span>).<span class="fu">get</span>());
+                }
+            })
+            .<span class="fu">doAfter</span>(<span class="kw">new</span> <span class="fu">ActionAfter</span>() {
+                @Override
+                <span class="kw">public</span> <span class="dt">void</span> <span class="fu">act</span>(Stacks stacks, AttributesContext context) {
+                    String name = stacks.<span class="fu">get</span>(<span class="st">&quot;person&quot;</span>).<span class="fu">pop</span>();
+                    <span class="dt">int</span> id = Integer.<span class="fu">parseInt</span>(stacks.<span class="fu">get</span>(<span class="st">&quot;person&quot;</span>).&lt;String&gt;<span class="fu">pop</span>());
+                    List&lt;Login&gt; logins = stacks.<span class="fu">get</span>(<span class="st">&quot;logins&quot;</span>).&lt;List&lt;Login&gt;&gt;<span class="fu">tryPop</span>().<span class="fu">or</span>(ImmutableList.&lt;Login&gt;<span class="fu">of</span>());
+
+                    ImmutableList.<span class="fu">Builder</span>&lt;Person&gt; personsBuilder = stacks.<span class="fu">peek</span>();
+                    personsBuilder.<span class="fu">add</span>(<span class="kw">new</span> <span class="fu">Person</span>(id, name, logins));
+                }
+            });
+
+        <span class="fu">on</span>(<span class="st">&quot;/persons/person/name&quot;</span>)
+            .<span class="fu">doAt</span>(<span class="kw">new</span> <span class="fu">ActionAt</span>() {
+                @Override
+                <span class="kw">public</span> <span class="dt">void</span> <span class="fu">act</span>(Stacks stacks, AttributesContext context, String body) {
+                    stacks.<span class="fu">get</span>(<span class="st">&quot;person&quot;</span>).<span class="fu">push</span>(body);
+                }
+            });
+
+        <span class="fu">on</span>(<span class="st">&quot;/persons/person/logins&quot;</span>)
+            .<span class="fu">doBefore</span>(<span class="kw">new</span> <span class="fu">ActionBefore</span>() {
+                @Override
+                <span class="kw">public</span> <span class="dt">void</span> <span class="fu">act</span>(Stacks stacks, AttributesContext context) {
+                    stacks.<span class="fu">get</span>(<span class="st">&quot;logins&quot;</span>).<span class="fu">push</span>(ImmutableList.<span class="fu">builder</span>());
+                }
+            })
+            .<span class="fu">doAfter</span>(<span class="kw">new</span> <span class="fu">ActionAfter</span>() {
+                @Override
+                <span class="kw">public</span> <span class="dt">void</span> <span class="fu">act</span>(Stacks stacks, AttributesContext context) {
+                    stacks.<span class="fu">get</span>(<span class="st">&quot;logins&quot;</span>).<span class="fu">push</span>(
+                        stacks.<span class="fu">get</span>(<span class="st">&quot;logins&quot;</span>).&lt;ImmutableList.<span class="fu">Builder</span>&lt;Login&gt;&gt;<span class="fu">pop</span>().<span class="fu">build</span>()
+                    );
+                }
+            });
+
+        <span class="fu">on</span>(<span class="st">&quot;/persons/person/logins/login&quot;</span>)
+            .<span class="fu">doAt</span>(<span class="kw">new</span> <span class="fu">ActionAt</span>() {
+                @Override
+                <span class="kw">public</span> <span class="dt">void</span> <span class="fu">act</span>(Stacks stacks, AttributesContext context, String body) {
+                    stacks.<span class="fu">get</span>(<span class="st">&quot;logins&quot;</span>).&lt;ImmutableList.<span class="fu">Builder</span>&lt;Login&gt;&gt;<span class="fu">peek</span>()
+                          .<span class="fu">add</span>(<span class="kw">new</span> <span class="fu">Login</span>(context.<span class="fu">attribute</span>(<span class="st">&quot;site&quot;</span>).<span class="fu">get</span>(), body));
+                }
+            });
+
+    }
+}</code></pre>
+<p>This looks awfully verbose; however, it would look much better from inside the IDE, where code folding hides most of the verboseness. Furthermore, with Java 8 there will be no verboseness at all! This is how the module would look in Java 8:</p>
+<pre class="sourceCode java"><code class="sourceCode java"><span class="kw">public</span> <span class="kw">class</span> PersonModule2 <span class="kw">extends</span> AbstractMappingModule {
+    @Override
+    <span class="kw">protected</span> <span class="dt">void</span> <span class="fu">configure</span>() {
+        <span class="fu">on</span>(<span class="st">&quot;/persons&quot;</span>)
+            .<span class="fu">doBefore</span>((stacks, context) -&gt; stacks.<span class="fu">push</span>(ImmutableList.<span class="fu">builder</span>()))
+            .<span class="fu">doAfter</span>((stacks, context) -&gt; {
+                ImmutableList.<span class="fu">Builder</span>&lt;Person&gt; builder = stacks.<span class="fu">pop</span>();
+                stacks.<span class="fu">push</span>(builder.<span class="fu">build</span>());
+            });
+
+        <span class="fu">on</span>(<span class="st">&quot;/persons/person&quot;</span>)
+            .<span class="fu">doBefore</span>((stacks, context) -&gt; stacks.<span class="fu">get</span>(<span class="st">&quot;person&quot;</span>).<span class="fu">push</span>(context.<span class="fu">attribute</span>(<span class="st">&quot;id&quot;</span>).<span class="fu">get</span>()))
+            .<span class="fu">doAfter</span>((stacks, context) -&gt; {
+                String name = stacks.<span class="fu">get</span>(<span class="st">&quot;person&quot;</span>).<span class="fu">pop</span>();
+                <span class="dt">int</span> id = Integer.<span class="fu">parseInt</span>(stacks.<span class="fu">get</span>(<span class="st">&quot;person&quot;</span>).&lt;String&gt;<span class="fu">pop</span>());
+                List&lt;Login&gt; logins = stacks.<span class="fu">get</span>(<span class="st">&quot;logins&quot;</span>).&lt;List&lt;Login&gt;&gt;<span class="fu">tryPop</span>().<span class="fu">or</span>(ImmutableList.&lt;Login&gt;<span class="fu">of</span>());
+
+                ImmutableList.<span class="fu">Builder</span>&lt;Person&gt; personsBuilder = stacks.<span class="fu">peek</span>();
+                personsBuilder.<span class="fu">add</span>(<span class="kw">new</span> <span class="fu">Person</span>(id, name, logins));
+            });
+
+        <span class="fu">on</span>(<span class="st">&quot;/persons/person/name&quot;</span>)
+            .<span class="fu">doAt</span>((stacks, context, body) -&gt; stacks.<span class="fu">get</span>(<span class="st">&quot;person&quot;</span>).<span class="fu">push</span>(body));
+
+        <span class="fu">on</span>(<span class="st">&quot;/persons/person/logins&quot;</span>)
+            .<span class="fu">doBefore</span>((stacks, context) -&gt; stacks.<span class="fu">get</span>(<span class="st">&quot;logins&quot;</span>).<span class="fu">push</span>(ImmutableList.<span class="fu">builder</span>()))
+            .<span class="fu">doAfter</span>((stacks, context) -&gt; stacks.<span class="fu">get</span>(<span class="st">&quot;logins&quot;</span>).<span class="fu">push</span>(
+                stacks.<span class="fu">get</span>(<span class="st">&quot;logins&quot;</span>).&lt;ImmutableList.<span class="fu">Builder</span>&lt;Login&gt;&gt;<span class="fu">pop</span>().<span class="fu">build</span>()
+            ));
+
+        <span class="fu">on</span>(<span class="st">&quot;/persons/person/logins/login&quot;</span>)
+            .<span class="fu">doAt</span>((stacks, context, body) -&gt; {
+                stacks.<span class="fu">get</span>(<span class="st">&quot;logins&quot;</span>).&lt;ImmutableList.<span class="fu">Builder</span>&lt;Login&gt;&gt;<span class="fu">peek</span>()
+                      .<span class="fu">add</span>(<span class="kw">new</span> <span class="fu">Login</span>(context.<span class="fu">attribute</span>(<span class="st">&quot;site&quot;</span>).<span class="fu">get</span>(), body));
+            });
+    }
+}</code></pre>
+<p>The only boilerplate code here is repeated use of <code>stacks</code>, <code>context</code> and <code>body</code> lambda parameters, and even that is possible to alleviate using default methods provided by Java 8. I may possibly add special Java 8 support library for this later.</p>
+<p>In fact, IntelliJ IDEA folds code in such way that you see it very similar to this even with Java 6/7 language level.</p>
+<p>Another possibility is annotated configuration. An annotated class which will do the same job as the modules above looks like this:</p>
+<pre class="sourceCode java"><code class="sourceCode java"><span class="kw">public</span> <span class="kw">class</span> PersonAnnotatedConfig {
+    @<span class="fu">Before</span>(<span class="st">&quot;/persons&quot;</span>)
+    <span class="kw">public</span> ImmutableList.<span class="fu">Builder</span>&lt;Person&gt; <span class="fu">beforePersons</span>() {
+        <span class="kw">return</span> ImmutableList.<span class="fu">builder</span>();
+    }
+
+    @<span class="fu">Before</span>(<span class="st">&quot;/persons/person&quot;</span>)
+    @<span class="fu">PushTo</span>(<span class="st">&quot;person&quot;</span>)
+    <span class="kw">public</span> String <span class="fu">personId</span>(AttributesContext context) {
+        <span class="kw">return</span> context.<span class="fu">attribute</span>(<span class="st">&quot;id&quot;</span>).<span class="fu">get</span>();
+    }
+
+    @<span class="fu">At</span>(<span class="st">&quot;/persons/person/name&quot;</span>)
+    @<span class="fu">PushTo</span>(<span class="st">&quot;person&quot;</span>)
+    <span class="kw">public</span> String <span class="fu">personName</span>(String body) {
+        <span class="kw">return</span> body;
+    }
+
+    @<span class="fu">Before</span>(<span class="st">&quot;/persons/person/logins&quot;</span>)
+    @<span class="fu">PushTo</span>(<span class="st">&quot;logins&quot;</span>)
+    <span class="kw">public</span> ImmutableList.<span class="fu">Builder</span>&lt;Login&gt; <span class="fu">beforeLogins</span>() {
+        <span class="kw">return</span> ImmutableList.<span class="fu">builder</span>();
+    }
+
+    @<span class="fu">At</span>(<span class="st">&quot;/persons/person/logins/login&quot;</span>)
+    <span class="kw">public</span> <span class="dt">void</span> <span class="fu">addLogin</span>(@<span class="fu">PeekFrom</span>(<span class="st">&quot;logins&quot;</span>) ImmutableList.<span class="fu">Builder</span>&lt;Login&gt; loginsBuilder, String body,
+                         AttributesContext context) {
+        loginsBuilder.<span class="fu">add</span>(<span class="kw">new</span> <span class="fu">Login</span>(context.<span class="fu">attribute</span>(<span class="st">&quot;site&quot;</span>).<span class="fu">get</span>(), body));
+    }
+
+    @<span class="fu">After</span>(<span class="st">&quot;/persons/person/logins&quot;</span>)
+    @<span class="fu">PushTo</span>(<span class="st">&quot;logins&quot;</span>)
+    <span class="kw">public</span> List&lt;Login&gt; <span class="fu">afterLogins</span>(@<span class="fu">PopFrom</span>(<span class="st">&quot;logins&quot;</span>) ImmutableList.<span class="fu">Builder</span>&lt;Login&gt; loginsBuilder) {
+        <span class="kw">return</span> loginsBuilder.<span class="fu">build</span>();
+    }
+
+    @<span class="fu">After</span>(<span class="st">&quot;/persons/person&quot;</span>)
+    <span class="kw">public</span> <span class="dt">void</span> <span class="fu">afterPerson</span>(@<span class="fu">PopFrom</span>(<span class="st">&quot;person&quot;</span>) String name, @<span class="fu">PopFrom</span>(<span class="st">&quot;person&quot;</span>) String id,
+                            @<span class="fu">PopFrom</span>(<span class="st">&quot;logins&quot;</span>) Optional&lt;List&lt;Login&gt;&gt; logins,
+                            @Peek ImmutableList.<span class="fu">Builder</span>&lt;Person&gt; personsBuilder) {
+        personsBuilder.<span class="fu">add</span>(<span class="kw">new</span> <span class="fu">Person</span>(Integer.<span class="fu">parseInt</span>(id), name, logins.<span class="fu">or</span>(ImmutableList.&lt;Login&gt;<span class="fu">of</span>())));
+    }
+
+    @<span class="fu">After</span>(<span class="st">&quot;/persons&quot;</span>)
+    <span class="kw">public</span> List&lt;Person&gt; <span class="fu">afterPersons</span>(@Pop ImmutableList.<span class="fu">Builder</span>&lt;Person&gt; personsBuilder) {
+        <span class="kw">return</span> personsBuilder.<span class="fu">build</span>();
+    }
+}</code></pre>
+<p>As you can see, annotated configuration reads slightly easier that modular configuration. There are no explicit <code>Stacks</code> modification, it is hidden behind annotated parameters and methods.</p>
+<p>Module definition was the hardest part. Actual XML parsing is very simple:</p>
+<pre class="sourceCode java"><code class="sourceCode java">Devourer devourer = Devourer.<span class="fu">create</span>(<span class="kw">new</span> <span class="fu">PersonModule</span>());
+<span class="co">// Or:</span>
+<span class="co">// Devourer devourer = Devourer.create(new PersonAnnotatedConfig());</span>
+Reader reader = <span class="fu">obtainReaderForXMLSomewhere</span>();
+Stacks stack = devourer.<span class="fu">parse</span>(reader);
+List&lt;Person&gt; persons = stacks.<span class="fu">pop</span>();</code></pre>
+<p>That’s it. <code>persons</code> will be a list of <code>Person</code> objects read from the XML and constructed via actions configured in the module.</p>
+<h2 id="limitations-of-the-library">Limitations of the library</h2>
+<p>There are several limitations of the library I’m aware of; some of them will be fixed in the next versions.</p>
+<ol type="1">
+<li>Devourer does not handle namespaces well. Currently paths are resolved using local names; it is not possible to distinguish between different namespaces by the means of the path only. The only way you can use namespaces is to get them using <code>AttributesContext</code>. This is something I intend to change very soon.</li>
+<li>Devourer does not have special shortcut actions to do some specific job, e.g. set JavaBean property or create an object. This is done intentionally, since such actions usually require reflection to work, and I tried to avoid reflection as much as possible. Also, I’m convinced that JavaBean-style class are evil: they are usually mutable (and I think that mutable DTOs should be avoided at all costs) and bring unneccessary clutter in form of getter/setter methods. However, Devourer may provide some shortcut actions in the future if I find them useful.</li>
+<li>Devourer API is not stable right now. It is possible that I would change something in the new version which will break your code. I will notify about such changes in my blog.</li>
+</ol>
+<h2 id="bugs">Bugs</h2>
+<p>Currently I don’t know of any bugs in the library. If you found one, feel free to post it to the <a href="https://bitbucket.org/googolplex/devourer/issues">Bitbucket issue tracker</a>.</p>
+  </div>
+</div>
+
+        </div>
+        <div class="footer">
+            Copyright © 2012-2013 Vladimir Matveev
+            <br>
+            Generated with <a href="http://jaspervdj.be/hakyll/">hakyll</a>
+        </div>
+    </div>
+</body>
+</html>
