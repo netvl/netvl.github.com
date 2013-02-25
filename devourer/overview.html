@@ -426,7 +426,11 @@ Stacks stack = devourer.<span class="fu">parse</span>(reader);
 List&lt;Person&gt; persons = stacks.<span class="fu">pop</span>();</code></pre>
 <p>That’s it. <code>persons</code> will be a list of <code>Person</code> objects read from the XML and constructed via actions configured in the module.</p>
 <h2 id="operational-configuration">Operational configuration</h2>
-<p>It is possible to configure Devourer behavior using <code>DevourerConfig</code> object. These are the things you can currently tweak using this configuration: - enable or disable trimming of leading and trailing whitespaces of element textual content; this is something you usually want to have, so it is enabled by default, however, sometimes you want to turn it off (e.g. when handling CDATA); - configure StAX parser directly by setting StAX <code>XMLInputFactory</code> properties.</p>
+<p>It is possible to configure Devourer behavior using <code>DevourerConfig</code> object. These are the things you can currently tweak using this configuration:</p>
+<ul>
+<li>enable or disable trimming of leading and trailing whitespaces of element textual content; this is something you usually want to have, so it is enabled by default, however, sometimes you want to turn it off (e.g. when handling CDATA);</li>
+<li>configure StAX parser directly by setting StAX <code>XMLInputFactory</code> properties.</li>
+</ul>
 <p><code>DevourerConfig</code> object is usually created using builder class. It looks like this:</p>
 <pre class="sourceCode java"><code class="sourceCode java">DevourerConfig config = DevourerConfig.<span class="fu">builder</span>()
     .<span class="fu">setStripSpaces</span>(<span class="kw">false</span>)
