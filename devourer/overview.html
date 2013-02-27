@@ -32,19 +32,20 @@
   <h1 class="title-field">Devourer overview</h1>
   <div class="date-tags-container">
       23/02/2013 <span style="display: inline-block; width: 1em"></span>
-      manual vesion: 1 <span style="display: inline-block; width: 1em"></span>
+      manual vesion: 2 <span style="display: inline-block; width: 1em"></span>
       devourer version: 0.1
   </div>
   <div>
 <p>This document is an official manual for <strong>Devourer XML processing library</strong>. This page will be updated with the changes in new releases of the library.</p>
 <p>Devourer is a library for streaming XML processing. It is a wrapper around StAX parsing library providing easy-to-use mechanism to configure actions which should be executed on certain elements inside an XML document. These actions can do anything with the data they receive, e.g. construct new objects. To hold intermediate state stack data structure is used.</p>
 <p>Devourer is very simple to use. First you create and configure an instance of <code>Devourer</code> class and then you feed it an XML document. Devourer accepts <code>InputStream</code>s, <code>Reader</code>s, byte arrays and strings. After parsing it produces <code>Stacks</code> object which contains results of the processing.</p>
-<p>Devourer’s source code can be found at Bitbucket: <a href="https://bitbucket.org/googolplex/devourer">https://bitbucket.org/googolplex/devourer</a>. Binary release will be available soon at Maven Central:</p>
+<p>Devourer’s source code can be found at Bitbucket: <a href="https://bitbucket.org/googolplex/devourer">https://bitbucket.org/googolplex/devourer</a>. Binary release is available at Maven Central:</p>
 <pre class="sourceCode xml"><code class="sourceCode xml"><span class="kw">&lt;dependency&gt;</span>
     <span class="kw">&lt;groupId&gt;</span>org.bitbucket.googolplex.devourer<span class="kw">&lt;/groupId&gt;</span>
     <span class="kw">&lt;artifactId&gt;</span>devourer<span class="kw">&lt;/artifactId&gt;</span>
     <span class="kw">&lt;version&gt;</span>0.1<span class="kw">&lt;/version&gt;</span>
 <span class="kw">&lt;/dependency&gt;</span></code></pre>
+<p>Devourer is released under Apache 2.0 license, so you can use it everywhere you want.</p>
 <h2 id="inspirations">Inspirations</h2>
 <p>Devourer is heavily influenced by <a href="http://commons.apache.org/digester/">Apache Commons Digester</a>. In fact, it does the same work as Digester, but there are some differences.</p>
 <p>First, Devourer is based on StAX library instead of SAX. This leads to much cleaner and easier to support parsing code, as well as nearly effortless thread safety. StAX provides so-called ‘pull’ parser, as opposed to SAX ‘push’ parser. The difference is that in SAX <strong>the parser</strong> invokes callbacks provided by you when it reaches certain XML entities, while with the StAX parser <strong>you</strong> advance the parser manually using iterator-like syntax. StAX parser allows writing much cleaner code because it gives more control over parsing process. Since you call its <code>next()</code> method manually, it is possible to run all XML processing inside a single method call, thus removing the need to hold intermediate state inside object fields. This works very nicely with concurrency.</p>
