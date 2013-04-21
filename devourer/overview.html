@@ -26,6 +26,7 @@
             <a href="../posts.html">All posts</a>
             <a href="../tags.html">All tags</a>
             <a href="../devourer/overview.html">Devourer library</a>
+            <a href="../guice/users-guide.html">Руководство пользователя Google Guice (перевод)</a>
         </div>
         <div class="container">
 <div class="post-body">
@@ -103,23 +104,23 @@
 <p>Modular configuration looks like <a href="http://code.google.com/p/google-guice/">Google Guice</a> or Digester modules. It provides very lightweight DSL to help you define actions which should be taken on different nodes of the document. It is designed in such way that it is compatible with Java 8 Lambda extension; moreover, modern IDEs (e.g. IntelliJ IDEA) can fold anonymous classes into something highly resembling lambdas, so configuration modules look fairly lean and straightforward, without sacrificing effectiveness of direct code invocation (opposite to reflective calls of Digester). This is the preferred method of configuration.</p>
 <p>Modular configuration is usually defined by extending <code>AbstractMappingModule</code> class, though nothing prevents you from implementing <code>MappingModule</code> interface directly. <code>AbstractMappingModule</code> has single method, <code>configure()</code>, which is invoked by Devourer to configure mappings. It looks like this:</p>
 <pre class="sourceCode java"><code class="sourceCode java"><span class="kw">public</span> <span class="kw">class</span> ExampleModule <span class="kw">extends</span> AbstractMappingModule {
-    @Override
+    <span class="fu">@Override</span>
     <span class="kw">public</span> <span class="dt">void</span> <span class="fu">configure</span>() {
         <span class="fu">on</span>(&lt;path&gt;)
             .<span class="fu">doBefore</span>(<span class="kw">new</span> <span class="fu">ActionBefore</span>() {
-                @Override
+                <span class="fu">@Override</span>
                 <span class="kw">public</span> <span class="dt">void</span> <span class="fu">act</span>(Stacks stacks, AttributesContext context) {
                     &lt;before-action&gt;
                 }
             })
             .<span class="fu">doAt</span>(<span class="kw">new</span> <span class="fu">ActionAt</span>() {
-                @Override
+                <span class="fu">@Override</span>
                 <span class="kw">public</span> <span class="dt">void</span> <span class="fu">act</span>(Stacks stacks, AttributesContext context, String body) {
                     &lt;at-action&gt;
                 }                    
             })
             .<span class="fu">doAfter</span>(<span class="kw">new</span> <span class="fu">ActionAfter</span>() {
-                @Override
+                <span class="fu">@Override</span>
                 <span class="kw">public</span> <span class="dt">void</span> <span class="fu">act</span>(Stacks stacks, AttributesContext context) {
                     &lt;after-action&gt;
                 }
@@ -198,13 +199,13 @@
 </table>
 <p>Any other parameter type/annotation combination is illegal, and corresponding exception will be thrown at configuration time.</p>
 <p><code>@Pop*</code> annotations change <code>Stacks</code> state. This object is queried exactly in the order of parameters annotated with stack-manipulating annotations. For example, the following annotated action:</p>
-<pre class="sourceCode java"><code class="sourceCode java">@<span class="fu">Before</span>(...)
-<span class="kw">public</span> <span class="dt">void</span> <span class="fu">action</span>(@Pop String value1, @Pop <span class="dt">int</span> value2, @Peek <span class="dt">boolean</span> value3,
-                   @Pop <span class="dt">boolean</span> value4) {
+<pre class="sourceCode java"><code class="sourceCode java"><span class="fu">@Before</span>(...)
+<span class="kw">public</span> <span class="dt">void</span> <span class="fu">action</span>(<span class="fu">@Pop</span> String value1, <span class="fu">@Pop</span> <span class="dt">int</span> value2, <span class="fu">@Peek</span> <span class="dt">boolean</span> value3,
+                   <span class="fu">@Pop</span> <span class="dt">boolean</span> value4) {
     ...
 }</code></pre>
 <p>Is equivalent to the this direct stack manipulation:</p>
-<pre class="sourceCode java"><code class="sourceCode java">@<span class="fu">Before</span>(...)
+<pre class="sourceCode java"><code class="sourceCode java"><span class="fu">@Before</span>(...)
 <span class="kw">public</span> <span class="dt">void</span> <span class="fu">action</span>(Stacks stacks) {
     String value1 = stacks.<span class="fu">pop</span>();
     <span class="dt">int</span> value2 = stacks.<span class="fu">pop</span>();
@@ -257,17 +258,17 @@
 }</code></pre>
 <p>Then the following actions mapping will do the work for you:</p>
 <pre class="sourceCode java"><code class="sourceCode java"><span class="kw">public</span> <span class="kw">class</span> PersonModule <span class="kw">extends</span> AbstractMappingModule {
-    @Override
+    <span class="fu">@Override</span>
     <span class="kw">protected</span> <span class="dt">void</span> <span class="fu">configure</span>() {
         <span class="fu">on</span>(<span class="st">&quot;/persons&quot;</span>)
             .<span class="fu">doBefore</span>(<span class="kw">new</span> <span class="fu">ActionBefore</span>() {
-                @Override
+                <span class="fu">@Override</span>
                 <span class="kw">public</span> <span class="dt">void</span> <span class="fu">act</span>(Stacks stacks, AttributesContext context) {
                     stacks.<span class="fu">push</span>(ImmutableList.<span class="fu">builder</span>());
                 }
             })
             .<span class="fu">doAfter</span>(<span class="kw">new</span> <span class="fu">ActionAfter</span>() {
-                @Override
+                <span class="fu">@Override</span>
                 <span class="kw">public</span> <span class="dt">void</span> <span class="fu">act</span>(Stacks stacks, AttributesContext context) {
                     ImmutableList.<span class="fu">Builder</span>&lt;Person&gt; builder = stacks.<span class="fu">pop</span>();
                     stacks.<span class="fu">push</span>(builder.<span class="fu">build</span>());
@@ -276,13 +277,13 @@
 
         <span class="fu">on</span>(<span class="st">&quot;/persons/person&quot;</span>)
             .<span class="fu">doBefore</span>(<span class="kw">new</span> <span class="fu">ActionBefore</span>() {
-                @Override
+                <span class="fu">@Override</span>
                 <span class="kw">public</span> <span class="dt">void</span> <span class="fu">act</span>(Stacks stacks, AttributesContext context) {
                     stacks.<span class="fu">get</span>(<span class="st">&quot;person&quot;</span>).<span class="fu">push</span>(context.<span class="fu">attribute</span>(<span class="st">&quot;id&quot;</span>).<span class="fu">get</span>());
                 }
             })
             .<span class="fu">doAfter</span>(<span class="kw">new</span> <span class="fu">ActionAfter</span>() {
-                @Override
+                <span class="fu">@Override</span>
                 <span class="kw">public</span> <span class="dt">void</span> <span class="fu">act</span>(Stacks stacks, AttributesContext context) {
                     String name = stacks.<span class="fu">get</span>(<span class="st">&quot;person&quot;</span>).<span class="fu">pop</span>();
                     <span class="dt">int</span> id = Integer.<span class="fu">parseInt</span>(stacks.<span class="fu">get</span>(<span class="st">&quot;person&quot;</span>).&lt;String&gt;<span class="fu">pop</span>());
@@ -295,7 +296,7 @@
 
         <span class="fu">on</span>(<span class="st">&quot;/persons/person/name&quot;</span>)
             .<span class="fu">doAt</span>(<span class="kw">new</span> <span class="fu">ActionAt</span>() {
-                @Override
+                <span class="fu">@Override</span>
                 <span class="kw">public</span> <span class="dt">void</span> <span class="fu">act</span>(Stacks stacks, AttributesContext context, String body) {
                     stacks.<span class="fu">get</span>(<span class="st">&quot;person&quot;</span>).<span class="fu">push</span>(body);
                 }
@@ -303,13 +304,13 @@
 
         <span class="fu">on</span>(<span class="st">&quot;/persons/person/logins&quot;</span>)
             .<span class="fu">doBefore</span>(<span class="kw">new</span> <span class="fu">ActionBefore</span>() {
-                @Override
+                <span class="fu">@Override</span>
                 <span class="kw">public</span> <span class="dt">void</span> <span class="fu">act</span>(Stacks stacks, AttributesContext context) {
                     stacks.<span class="fu">get</span>(<span class="st">&quot;logins&quot;</span>).<span class="fu">push</span>(ImmutableList.<span class="fu">builder</span>());
                 }
             })
             .<span class="fu">doAfter</span>(<span class="kw">new</span> <span class="fu">ActionAfter</span>() {
-                @Override
+                <span class="fu">@Override</span>
                 <span class="kw">public</span> <span class="dt">void</span> <span class="fu">act</span>(Stacks stacks, AttributesContext context) {
                     stacks.<span class="fu">get</span>(<span class="st">&quot;logins&quot;</span>).<span class="fu">push</span>(
                         stacks.<span class="fu">get</span>(<span class="st">&quot;logins&quot;</span>).&lt;ImmutableList.<span class="fu">Builder</span>&lt;Login&gt;&gt;<span class="fu">pop</span>().<span class="fu">build</span>()
@@ -319,7 +320,7 @@
 
         <span class="fu">on</span>(<span class="st">&quot;/persons/person/logins/login&quot;</span>)
             .<span class="fu">doAt</span>(<span class="kw">new</span> <span class="fu">ActionAt</span>() {
-                @Override
+                <span class="fu">@Override</span>
                 <span class="kw">public</span> <span class="dt">void</span> <span class="fu">act</span>(Stacks stacks, AttributesContext context, String body) {
                     stacks.<span class="fu">get</span>(<span class="st">&quot;logins&quot;</span>).&lt;ImmutableList.<span class="fu">Builder</span>&lt;Login&gt;&gt;<span class="fu">peek</span>()
                           .<span class="fu">add</span>(<span class="kw">new</span> <span class="fu">Login</span>(context.<span class="fu">attribute</span>(<span class="st">&quot;site&quot;</span>).<span class="fu">get</span>(), body));
@@ -330,7 +331,7 @@
 }</code></pre>
 <p>This looks awfully verbose; however, it would look much better from inside the IDE, where code folding hides most of the verboseness. Furthermore, with Java 8 there will be no verboseness at all! This is how the module would look in Java 8:</p>
 <pre class="sourceCode java"><code class="sourceCode java"><span class="kw">public</span> <span class="kw">class</span> PersonModule2 <span class="kw">extends</span> AbstractMappingModule {
-    @Override
+    <span class="fu">@Override</span>
     <span class="kw">protected</span> <span class="dt">void</span> <span class="fu">configure</span>() {
         <span class="fu">on</span>(<span class="st">&quot;/persons&quot;</span>)
             .<span class="fu">doBefore</span>((stacks, context) -&gt; stacks.<span class="fu">push</span>(ImmutableList.<span class="fu">builder</span>()))
@@ -370,50 +371,50 @@
 <p>In fact, IntelliJ IDEA folds code in such way that you see it very similar to this even with Java 6/7 language level.</p>
 <p>Another possibility is annotated configuration. An annotated class which will do the same job as the modules above looks like this:</p>
 <pre class="sourceCode java"><code class="sourceCode java"><span class="kw">public</span> <span class="kw">class</span> PersonAnnotatedConfig {
-    @<span class="fu">Before</span>(<span class="st">&quot;/persons&quot;</span>)
+    <span class="fu">@Before</span>(<span class="st">&quot;/persons&quot;</span>)
     <span class="kw">public</span> ImmutableList.<span class="fu">Builder</span>&lt;Person&gt; <span class="fu">beforePersons</span>() {
         <span class="kw">return</span> ImmutableList.<span class="fu">builder</span>();
     }
 
-    @<span class="fu">Before</span>(<span class="st">&quot;/persons/person&quot;</span>)
-    @<span class="fu">PushTo</span>(<span class="st">&quot;person&quot;</span>)
+    <span class="fu">@Before</span>(<span class="st">&quot;/persons/person&quot;</span>)
+    <span class="fu">@PushTo</span>(<span class="st">&quot;person&quot;</span>)
     <span class="kw">public</span> String <span class="fu">personId</span>(AttributesContext context) {
         <span class="kw">return</span> context.<span class="fu">attribute</span>(<span class="st">&quot;id&quot;</span>).<span class="fu">get</span>();
     }
 
-    @<span class="fu">At</span>(<span class="st">&quot;/persons/person/name&quot;</span>)
-    @<span class="fu">PushTo</span>(<span class="st">&quot;person&quot;</span>)
+    <span class="fu">@At</span>(<span class="st">&quot;/persons/person/name&quot;</span>)
+    <span class="fu">@PushTo</span>(<span class="st">&quot;person&quot;</span>)
     <span class="kw">public</span> String <span class="fu">personName</span>(String body) {
         <span class="kw">return</span> body;
     }
 
-    @<span class="fu">Before</span>(<span class="st">&quot;/persons/person/logins&quot;</span>)
-    @<span class="fu">PushTo</span>(<span class="st">&quot;logins&quot;</span>)
+    <span class="fu">@Before</span>(<span class="st">&quot;/persons/person/logins&quot;</span>)
+    <span class="fu">@PushTo</span>(<span class="st">&quot;logins&quot;</span>)
     <span class="kw">public</span> ImmutableList.<span class="fu">Builder</span>&lt;Login&gt; <span class="fu">beforeLogins</span>() {
         <span class="kw">return</span> ImmutableList.<span class="fu">builder</span>();
     }
 
-    @<span class="fu">At</span>(<span class="st">&quot;/persons/person/logins/login&quot;</span>)
-    <span class="kw">public</span> <span class="dt">void</span> <span class="fu">addLogin</span>(@<span class="fu">PeekFrom</span>(<span class="st">&quot;logins&quot;</span>) ImmutableList.<span class="fu">Builder</span>&lt;Login&gt; loginsBuilder, String body,
+    <span class="fu">@At</span>(<span class="st">&quot;/persons/person/logins/login&quot;</span>)
+    <span class="kw">public</span> <span class="dt">void</span> <span class="fu">addLogin</span>(<span class="fu">@PeekFrom</span>(<span class="st">&quot;logins&quot;</span>) ImmutableList.<span class="fu">Builder</span>&lt;Login&gt; loginsBuilder, String body,
                          AttributesContext context) {
         loginsBuilder.<span class="fu">add</span>(<span class="kw">new</span> <span class="fu">Login</span>(context.<span class="fu">attribute</span>(<span class="st">&quot;site&quot;</span>).<span class="fu">get</span>(), body));
     }
 
-    @<span class="fu">After</span>(<span class="st">&quot;/persons/person/logins&quot;</span>)
-    @<span class="fu">PushTo</span>(<span class="st">&quot;logins&quot;</span>)
-    <span class="kw">public</span> List&lt;Login&gt; <span class="fu">afterLogins</span>(@<span class="fu">PopFrom</span>(<span class="st">&quot;logins&quot;</span>) ImmutableList.<span class="fu">Builder</span>&lt;Login&gt; loginsBuilder) {
+    <span class="fu">@After</span>(<span class="st">&quot;/persons/person/logins&quot;</span>)
+    <span class="fu">@PushTo</span>(<span class="st">&quot;logins&quot;</span>)
+    <span class="kw">public</span> List&lt;Login&gt; <span class="fu">afterLogins</span>(<span class="fu">@PopFrom</span>(<span class="st">&quot;logins&quot;</span>) ImmutableList.<span class="fu">Builder</span>&lt;Login&gt; loginsBuilder) {
         <span class="kw">return</span> loginsBuilder.<span class="fu">build</span>();
     }
 
-    @<span class="fu">After</span>(<span class="st">&quot;/persons/person&quot;</span>)
-    <span class="kw">public</span> <span class="dt">void</span> <span class="fu">afterPerson</span>(@<span class="fu">PopFrom</span>(<span class="st">&quot;person&quot;</span>) String name, @<span class="fu">PopFrom</span>(<span class="st">&quot;person&quot;</span>) String id,
-                            @<span class="fu">PopFrom</span>(<span class="st">&quot;logins&quot;</span>) Optional&lt;List&lt;Login&gt;&gt; logins,
-                            @Peek ImmutableList.<span class="fu">Builder</span>&lt;Person&gt; personsBuilder) {
+    <span class="fu">@After</span>(<span class="st">&quot;/persons/person&quot;</span>)
+    <span class="kw">public</span> <span class="dt">void</span> <span class="fu">afterPerson</span>(<span class="fu">@PopFrom</span>(<span class="st">&quot;person&quot;</span>) String name, <span class="fu">@PopFrom</span>(<span class="st">&quot;person&quot;</span>) String id,
+                            <span class="fu">@PopFrom</span>(<span class="st">&quot;logins&quot;</span>) Optional&lt;List&lt;Login&gt;&gt; logins,
+                            <span class="fu">@Peek</span> ImmutableList.<span class="fu">Builder</span>&lt;Person&gt; personsBuilder) {
         personsBuilder.<span class="fu">add</span>(<span class="kw">new</span> <span class="fu">Person</span>(Integer.<span class="fu">parseInt</span>(id), name, logins.<span class="fu">or</span>(ImmutableList.&lt;Login&gt;<span class="fu">of</span>())));
     }
 
-    @<span class="fu">After</span>(<span class="st">&quot;/persons&quot;</span>)
-    <span class="kw">public</span> List&lt;Person&gt; <span class="fu">afterPersons</span>(@Pop ImmutableList.<span class="fu">Builder</span>&lt;Person&gt; personsBuilder) {
+    <span class="fu">@After</span>(<span class="st">&quot;/persons&quot;</span>)
+    <span class="kw">public</span> List&lt;Person&gt; <span class="fu">afterPersons</span>(<span class="fu">@Pop</span> ImmutableList.<span class="fu">Builder</span>&lt;Person&gt; personsBuilder) {
         <span class="kw">return</span> personsBuilder.<span class="fu">build</span>();
     }
 }</code></pre>

@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Руководство пользователя Google Guice (перевод)</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="../styles/hk-pyg.css">
+    <script type="text/javascript" src="../js/jquery.js"></script>
+    <script>
+        $(document).ready(function () {
+            var bh = $("div.index-post-list").height();
+            var th = $("div.small-post-list").height();
+            var mh = bh > th ? bh : th;
+            $("div.index-post-list").height(mh);
+            $("div.small-post-list").height(mh);
+        });
+    </script>
+</head>
+<body>
+    <div class="content">
+        <div class="header">
+            <h1>Руководство пользователя Google Guice (перевод)</h1>
+        </div>
+        <div class="menu">
+            <a href="../index.html">Home</a>
+            <a href="../posts.html">All posts</a>
+            <a href="../tags.html">All tags</a>
+            <a href="../devourer/overview.html">Devourer library</a>
+            <a href="../guice/users-guide.html">Руководство пользователя Google Guice (перевод)</a>
+        </div>
+        <div class="container">
+<h2>Содержание</h2>
+<ul>
+<li><a href="#зачем-это-нужно"><span class="toc-section-number">1</span> Зачем это нужно</a><ul>
+<li><a href="#прямой-вызов-конструкторов"><span class="toc-section-number">1.1</span> Прямой вызов конструкторов</a></li>
+<li><a href="#фабрики"><span class="toc-section-number">1.2</span> Фабрики</a></li>
+<li><a href="#внедрение-зависимостей"><span class="toc-section-number">1.3</span> Внедрение зависимостей</a></li>
+<li><a href="#внедрение-зависимостей-с-помощью-guice"><span class="toc-section-number">1.4</span> Внедрение зависимостей с помощью Guice</a></li>
+</ul></li>
+<li><a href="#введение"><span class="toc-section-number">2</span> Введение</a></li>
+<li><a href="#привязки"><span class="toc-section-number">3</span> Привязки</a><ul>
+<li><a href="#компоновочные-привязки"><span class="toc-section-number">3.1</span> Компоновочные привязки</a></li>
+<li><a href="#привязочные-аннотации"><span class="toc-section-number">3.2</span> Привязочные аннотации</a><ul>
+<li><a href="#named"><span class="toc-section-number">3.2.1</span> <code>@Named</code></a></li>
+<li><a href="#привязочные-аннотации-с-атрибутами"><span class="toc-section-number">3.2.2</span> Привязочные аннотации с атрибутами</a></li>
+</ul></li>
+<li><a href="#экземплярные-привязки"><span class="toc-section-number">3.3</span> Экземплярные привязки</a></li>
+<li><a href="#provides-методы"><span class="toc-section-number">3.4</span> <code>@Provides</code>-методы</a><ul>
+<li><a href="#выбрасывание-исключений"><span class="toc-section-number">3.4.1</span> Выбрасывание исключений</a></li>
+</ul></li>
+<li><a href="#привязки-провайдеров"><span class="toc-section-number">3.5</span> Привязки провайдеров</a><ul>
+<li><a href="#выбрасывание-исключений-1"><span class="toc-section-number">3.5.1</span> Выбрасывание исключений</a></li>
+</ul></li>
+<li><a href="#бесцелевые-привязки"><span class="toc-section-number">3.6</span> Бесцелевые привязки</a></li>
+<li><a href="#привязки-конструкторов"><span class="toc-section-number">3.7</span> Привязки конструкторов</a></li>
+<li><a href="#встроенные-привязки"><span class="toc-section-number">3.8</span> Встроенные привязки</a><ul>
+<li><a href="#логгеры"><span class="toc-section-number">3.8.1</span> Логгеры</a></li>
+<li><a href="#инжектор"><span class="toc-section-number">3.8.2</span> Инжектор</a></li>
+<li><a href="#провайдеры"><span class="toc-section-number">3.8.3</span> Провайдеры</a></li>
+<li><a href="#typeliteralы"><span class="toc-section-number">3.8.4</span> <code>TypeLiteral</code>’ы</a></li>
+<li><a href="#стадии"><span class="toc-section-number">3.8.5</span> Стадии</a></li>
+<li><a href="#membersinjectorы"><span class="toc-section-number">3.8.6</span> <code>MembersInjector</code>’ы</a></li>
+</ul></li>
+<li><a href="#неявные-just-in-time-привязки"><span class="toc-section-number">3.9</span> Неявные (just-in-time) привязки</a><ul>
+<li><a href="#инжекционные-конструкторы"><span class="toc-section-number">3.9.1</span> Инжекционные конструкторы</a></li>
+<li><a href="#implementedby"><span class="toc-section-number">3.9.2</span> <code>@ImplementedBy</code></a></li>
+<li><a href="#providedby"><span class="toc-section-number">3.9.3</span> <code>@ProvidedBy</code></a></li>
+</ul></li>
+</ul></li>
+<li><a href="#области-видимости"><span class="toc-section-number">4</span> Области видимости</a><ul>
+<li><a href="#применение-областей-видимости"><span class="toc-section-number">4.1</span> Применение областей видимости</a></li>
+<li><a href="#энергичные-синглтоны"><span class="toc-section-number">4.2</span> Энергичные синглтоны</a></li>
+<li><a href="#выбор-области-видимости"><span class="toc-section-number">4.3</span> Выбор области видимости</a></li>
+<li><a href="#области-видимости-и-многопоточность"><span class="toc-section-number">4.4</span> Области видимости и многопоточность</a></li>
+</ul></li>
+<li><a href="#внедрение-зависимостей-1"><span class="toc-section-number">5</span> Внедрение зависимостей</a><ul>
+<li><a href="#способы-внедрения-зависимостей"><span class="toc-section-number">5.1</span> Способы внедрения зависимостей</a><ul>
+<li><a href="#внедрение-через-конструктор"><span class="toc-section-number">5.1.1</span> Внедрение через конструктор</a></li>
+<li><a href="#внедрение-через-методы"><span class="toc-section-number">5.1.2</span> Внедрение через методы</a></li>
+<li><a href="#внедрение-в-поля"><span class="toc-section-number">5.1.3</span> Внедрение в поля</a></li>
+<li><a href="#необязательные-внедрения"><span class="toc-section-number">5.1.4</span> Необязательные внедрения</a></li>
+<li><a href="#внедрение-по-запросу"><span class="toc-section-number">5.1.5</span> Внедрение по запросу</a></li>
+<li><a href="#статические-внедрения"><span class="toc-section-number">5.1.6</span> Статические внедрения</a></li>
+<li><a href="#автоматическое-внедрение"><span class="toc-section-number">5.1.7</span> Автоматическое внедрение</a></li>
+</ul></li>
+<li><a href="#внедрение-провайдеров"><span class="toc-section-number">5.2</span> Внедрение провайдеров</a><ul>
+<li><a href="#провайдеры-для-создания-нескольких-объектов"><span class="toc-section-number">5.2.1</span> Провайдеры для создания нескольких объектов</a></li>
+<li><a href="#провайдеры-для-ленивой-инициализации"><span class="toc-section-number">5.2.2</span> Провайдеры для ленивой инициализации</a></li>
+<li><a href="#провайдеры-для-доступа-к-более-узким-областям-видимости"><span class="toc-section-number">5.2.3</span> Провайдеры для доступа к более узким областям видимости</a></li>
+</ul></li>
+</ul></li>
+</ul>
+<h1 id="зачем-это-нужно"><a href="#зачем-это-нужно"><span class="header-section-number">1</span> Зачем это нужно</a></h1>
+<p>Объединение компонентов программы — весьма трудоёмкая часть процесса разработки. Существует несколько подходов к связыванию классов данных, сервисов и представления в единое целое. Для иллюстрации этих подходов напишем код биллинга к сайту-магазину пиццы:</p>
+<pre class="sourceCode java"><code class="sourceCode java">  <span class="kw">public</span> <span class="kw">interface</span> BillingService {
+      <span class="co">/**</span>
+<span class="co">       * Совершает попытку списания суммы заказа с кредитной карты. Записываются</span>
+<span class="co">       * как успешные, так и неуспешные транзакции.</span>
+<span class="co">       *</span>
+<span class="co">       * </span><span class="kw">@return </span><span class="co">возвращает чек транзации. Если списание было успешно,</span>
+<span class="co">       *         чек содержит подтверждение. В противном случае чек содержит</span>
+<span class="co">       *         запись причины отказа.</span>
+<span class="co">       */</span>
+      Receipt <span class="fu">chargeOrder</span>(PizzaOrder order, CreditCard creditCard);
+  }</code></pre>
+<p>Параллельно с настоящей реализацией напишем модульные тесты для нашего кода. Для них нам понадобится <code>FakeCreditCardProcessor</code> (“поддельный обработчик кредитных карт”), чтобы случайно не списать деньги с настоящей карты :)</p>
+<h2 id="прямой-вызов-конструкторов"><a href="#прямой-вызов-конструкторов"><span class="header-section-number">1.1</span> Прямой вызов конструкторов</a></h2>
+<p>Когда мы создаём обработчик кредиток и логгер транзакций с помощью <code>new</code>, код выглядит так:</p>
+<pre class="sourceCode java"><code class="sourceCode java">  <span class="kw">public</span> <span class="kw">class</span> RealBillingService <span class="kw">implements</span> BillingService {
+    <span class="kw">public</span> Receipt <span class="fu">chargeOrder</span>(PizzaOrder order, CreditCard creditCard) {
+      CreditCardProcessor processor = <span class="kw">new</span> <span class="fu">PaypalCreditCardProcessor</span>();
+      TransactionLog transactionLog = <span class="kw">new</span> <span class="fu">DatabaseTransactionLog</span>();
+  
+      <span class="kw">try</span> {
+        ChargeResult result = processor.<span class="fu">charge</span>(creditCard, order.<span class="fu">getAmount</span>());
+        transactionLog.<span class="fu">logChargeResult</span>(result);
+  
+        <span class="kw">return</span> result.<span class="fu">wasSuccessful</span>()
+            ? Receipt.<span class="fu">forSuccessfulCharge</span>(order.<span class="fu">getAmount</span>())
+            : Receipt.<span class="fu">forDeclinedCharge</span>(result.<span class="fu">getDeclineMessage</span>());
+       } <span class="kw">catch</span> (UnreachableException e) {
+        transactionLog.<span class="fu">logConnectException</span>(e);
+        <span class="kw">return</span> Receipt.<span class="fu">forSystemFailure</span>(e.<span class="fu">getMessage</span>());
+      }
+    }
+  }</code></pre>
+<p>Такой код создаёт проблемы для тестирования и модульности. Прямая зависимость времени компиляции на реальный обработчик кредиток означает, что с карточки будут сниматься деньги, когда мы проводим тестирование! Также такой код неудобно тестировать на обработку отказа транзакции или недоступности сервиса.</p>
+<h2 id="фабрики"><a href="#фабрики"><span class="header-section-number">1.2</span> Фабрики</a></h2>
+<p>Фабрика отделяет клиентский код от кода реализации класса. В простой фабрике используются статические методы (геттеры/сеттеры) для получения реализации интерфейса и установки заглушки. Например, фабрика может быть реализована так:</p>
+<pre class="sourceCode java"><code class="sourceCode java">  <span class="kw">public</span> <span class="kw">class</span> CreditCardProcessorFactory {
+    
+    <span class="kw">private</span> <span class="dt">static</span> CreditCardProcessor instance;
+    
+    <span class="kw">public</span> <span class="dt">static</span> <span class="dt">void</span> <span class="fu">setInstance</span>(CreditCardProcessor creditCardProcessor) {
+      instance = creditCardProcessor;
+    }
+  
+    <span class="kw">public</span> <span class="dt">static</span> CreditCardProcessor <span class="fu">getInstance</span>() {
+      <span class="kw">if</span> (instance == <span class="kw">null</span>) {
+        <span class="kw">return</span> <span class="kw">new</span> <span class="fu">SquareCreditCardProcessor</span>();
+      }
+      
+      <span class="kw">return</span> instance;
+    }
+  }</code></pre>
+<p>Тогда в клиентском коде непосредственные вызовы <code>new</code> заменяются на запросы к фабрике:</p>
+<pre class="sourceCode java"><code class="sourceCode java">  <span class="kw">public</span> <span class="kw">class</span> RealBillingService <span class="kw">implements</span> BillingService {
+    <span class="kw">public</span> Receipt <span class="fu">chargeOrder</span>(PizzaOrder order, CreditCard creditCard) {
+      CreditCardProcessor processor = CreditCardProcessorFactory.<span class="fu">getInstance</span>();
+      TransactionLog transactionLog = TransactionLogFactory.<span class="fu">getInstance</span>();
+  
+      <span class="kw">try</span> {
+        ChargeResult result = processor.<span class="fu">charge</span>(creditCard, order.<span class="fu">getAmount</span>());
+        transactionLog.<span class="fu">logChargeResult</span>(result);
+  
+        <span class="kw">return</span> result.<span class="fu">wasSuccessful</span>()
+            ? Receipt.<span class="fu">forSuccessfulCharge</span>(order.<span class="fu">getAmount</span>())
+            : Receipt.<span class="fu">forDeclinedCharge</span>(result.<span class="fu">getDeclineMessage</span>());
+       } <span class="kw">catch</span> (UnreachableException e) {
+        transactionLog.<span class="fu">logConnectException</span>(e);
+        <span class="kw">return</span> Receipt.<span class="fu">forSystemFailure</span>(e.<span class="fu">getMessage</span>());
+      }
+    }
+  }</code></pre>
+<p>С помощью фабрик можно написать полноценный модульный тест:</p>
+<pre class="sourceCode java"><code class="sourceCode java">  <span class="kw">public</span> <span class="kw">class</span> RealBillingServiceTest <span class="kw">extends</span> TestCase {
+  
+    <span class="kw">private</span> <span class="dt">final</span> PizzaOrder order = <span class="kw">new</span> <span class="fu">PizzaOrder</span>(<span class="dv">100</span>);
+    <span class="kw">private</span> <span class="dt">final</span> CreditCard creditCard = <span class="kw">new</span> <span class="fu">CreditCard</span>(<span class="st">&quot;1234&quot;</span>, <span class="dv">11</span>, <span class="dv">2010</span>);
+  
+    <span class="kw">private</span> <span class="dt">final</span> InMemoryTransactionLog transactionLog = <span class="kw">new</span> <span class="fu">InMemoryTransactionLog</span>();
+    <span class="kw">private</span> <span class="dt">final</span> FakeCreditCardProcessor creditCardProcessor = <span class="kw">new</span> <span class="fu">FakeCreditCardProcessor</span>();
+  
+    <span class="fu">@Override</span> <span class="kw">public</span> <span class="dt">void</span> <span class="fu">setUp</span>() {
+      TransactionLogFactory.<span class="fu">setInstance</span>(transactionLog);
+      CreditCardProcessorFactory.<span class="fu">setInstance</span>(creditCardProcessor);
+    }
+  
+    <span class="fu">@Override</span> <span class="kw">public</span> <span class="dt">void</span> <span class="fu">tearDown</span>() {
+      TransactionLogFactory.<span class="fu">setInstance</span>(<span class="kw">null</span>);
+      CreditCardProcessorFactory.<span class="fu">setInstance</span>(<span class="kw">null</span>);
+    }
+  
+    <span class="kw">public</span> <span class="dt">void</span> <span class="fu">testSuccessfulCharge</span>() {
+      RealBillingService billingService = <span class="kw">new</span> <span class="fu">RealBillingService</span>();
+      Receipt receipt = billingService.<span class="fu">chargeOrder</span>(order, creditCard);
+  
+      <span class="fu">assertTrue</span>(receipt.<span class="fu">hasSuccessfulCharge</span>());
+      <span class="fu">assertEquals</span>(<span class="dv">100</span>, receipt.<span class="fu">getAmountOfCharge</span>());
+      <span class="fu">assertEquals</span>(creditCard, creditCardProcessor.<span class="fu">getCardOfOnlyCharge</span>());
+      <span class="fu">assertEquals</span>(<span class="dv">100</span>, creditCardProcessor.<span class="fu">getAmountOfOnlyCharge</span>());
+      <span class="fu">assertTrue</span>(transactionLog.<span class="fu">wasSuccessLogged</span>());
+    }
+  }</code></pre>
+<p>Этот код весьма неуклюж. Реализация-заглушка хранится в глобальной переменной, поэтому нам следует быть особенно осторожными при инициализации и завершении теста. Если метод <code>tearDown</code> выкинет исключение, то глобальная переменная по-прежнему будет указывать на тестовый экземпляр сервиса, что может вызвать проблемы в других тестах. Также нельзя запускать параллельно несколько тестов.</p>
+<p>Однако, самой большой проблемой является то, что зависимости <strong>скрыты в коде</strong>. Если мы потом добавим зависимость на <code>CreditCardFraudTracker</code> (“трекер поддельных кредиток”), понадобится перезапускать все тесты и искать сломавшиеся. Если мы забудем проинициализировать фабрику настоящей реализацией сервиса, мы об этом не узнаем до тех пор, пока не попытаемся совершить транзакцию. С ростом кодовой базы приложения слежение за фабриками становится страшной головной болью.</p>
+<p>Проблемы с качеством кода могут выявить QA или приёмочные тесты. Этого может быть достаточно, но мы совершенно точно можем сделать лучше.</p>
+<h2 id="внедрение-зависимостей"><a href="#внедрение-зависимостей"><span class="header-section-number">1.3</span> Внедрение зависимостей</a></h2>
+<p>Как и фабрики, внедрение зависимостей — это просто паттерн проектирования. Ключевой принцип этого паттерна заключается в <strong>отделении кода поведения от кода разрешения зависимостей</strong>. В нашем случае это означает, что <code>RealBillingService</code> не должен сам создавать реализации <code>TransactionLog</code> и <code>CreditCardProcessor</code>. Вместо этого они должны передаваться как параметры конструктора:</p>
+<pre class="sourceCode java"><code class="sourceCode java">  <span class="kw">public</span> <span class="kw">class</span> RealBillingService <span class="kw">implements</span> BillingService {
+    <span class="kw">private</span> <span class="dt">final</span> CreditCardProcessor processor;
+    <span class="kw">private</span> <span class="dt">final</span> TransactionLog transactionLog;
+  
+    <span class="kw">public</span> <span class="fu">RealBillingService</span>(CreditCardProcessor processor, 
+        TransactionLog transactionLog) {
+      <span class="kw">this</span>.<span class="fu">processor</span> = processor;
+      <span class="kw">this</span>.<span class="fu">transactionLog</span> = transactionLog;
+    }
+  
+    <span class="kw">public</span> Receipt <span class="fu">chargeOrder</span>(PizzaOrder order, CreditCard creditCard) {
+      <span class="kw">try</span> {
+        ChargeResult result = processor.<span class="fu">charge</span>(creditCard, order.<span class="fu">getAmount</span>());
+        transactionLog.<span class="fu">logChargeResult</span>(result);
+  
+        <span class="kw">return</span> result.<span class="fu">wasSuccessful</span>()
+            ? Receipt.<span class="fu">forSuccessfulCharge</span>(order.<span class="fu">getAmount</span>())
+            : Receipt.<span class="fu">forDeclinedCharge</span>(result.<span class="fu">getDeclineMessage</span>());
+       } <span class="kw">catch</span> (UnreachableException e) {
+        transactionLog.<span class="fu">logConnectException</span>(e);
+        <span class="kw">return</span> Receipt.<span class="fu">forSystemFailure</span>(e.<span class="fu">getMessage</span>());
+      }
+    }
+  }</code></pre>
+<p>Теперь нам не нужны фабрики, и мы также можем упростить тест, выкинув методы <code>setUp</code> и <code>tearDown</code>:</p>
+<pre class="sourceCode java"><code class="sourceCode java">  <span class="kw">public</span> <span class="kw">class</span> RealBillingServiceTest <span class="kw">extends</span> TestCase {
+  
+    <span class="kw">private</span> <span class="dt">final</span> PizzaOrder order = <span class="kw">new</span> <span class="fu">PizzaOrder</span>(<span class="dv">100</span>);
+    <span class="kw">private</span> <span class="dt">final</span> CreditCard creditCard = <span class="kw">new</span> <span class="fu">CreditCard</span>(<span class="st">&quot;1234&quot;</span>, <span class="dv">11</span>, <span class="dv">2010</span>);
+  
+    <span class="kw">private</span> <span class="dt">final</span> InMemoryTransactionLog transactionLog = <span class="kw">new</span> <span class="fu">InMemoryTransactionLog</span>();
+    <span class="kw">private</span> <span class="dt">final</span> FakeCreditCardProcessor creditCardProcessor = <span class="kw">new</span> <span class="fu">FakeCreditCardProcessor</span>();
+  
+    <span class="kw">public</span> <span class="dt">void</span> <span class="fu">testSuccessfulCharge</span>() {
+      RealBillingService billingService
+          = <span class="kw">new</span> <span class="fu">RealBillingService</span>(creditCardProcessor, transactionLog);
+      Receipt receipt = billingService.<span class="fu">chargeOrder</span>(order, creditCard);
+  
+      <span class="fu">assertTrue</span>(receipt.<span class="fu">hasSuccessfulCharge</span>());
+      <span class="fu">assertEquals</span>(<span class="dv">100</span>, receipt.<span class="fu">getAmountOfCharge</span>());
+      <span class="fu">assertEquals</span>(creditCard, creditCardProcessor.<span class="fu">getCardOfOnlyCharge</span>());
+      <span class="fu">assertEquals</span>(<span class="dv">100</span>, creditCardProcessor.<span class="fu">getAmountOfOnlyCharge</span>());
+      <span class="fu">assertTrue</span>(transactionLog.<span class="fu">wasSuccessLogged</span>());
+    }
+  }</code></pre>
+<p>Теперь если мы удаляем или добавляем зависимости, компилятор нам подскажет, какие тесты нужно исправить. Зависимости становятся <strong>явно выражены в API</strong>.</p>
+<p>Однако теперь бремя создания зависимостей ложится на клиента <code>BillingService</code>. Частично его можно снять, применив паттерн снова, т.е. классы, зависящие от <code>BillingService</code>, могут принимать его через конструктор. Однако, для реализации самого верхнего уровня в этой цепочке желательно воспользоваться каким-либо фреймворком, иначе зависимости придётся разрешать вручную рекурсивно каждый раз, когда нам понадобится сервис:</p>
+<pre class="sourceCode java"><code class="sourceCode java">    <span class="kw">public</span> <span class="dt">static</span> <span class="dt">void</span> <span class="fu">main</span>(String[] args) {
+      CreditCardProcessor processor = <span class="kw">new</span> <span class="fu">PaypalCreditCardProcessor</span>();
+      TransactionLog transactionLog = <span class="kw">new</span> <span class="fu">DatabaseTransactionLog</span>();
+      BillingService billingService
+          = <span class="kw">new</span> <span class="fu">RealBillingService</span>(creditCardProcessor, transactionLog);
+      ...
+    }</code></pre>
+<h2 id="внедрение-зависимостей-с-помощью-guice"><a href="#внедрение-зависимостей-с-помощью-guice"><span class="header-section-number">1.4</span> Внедрение зависимостей с помощью Guice</a></h2>
+<p>Применение паттерна внедрения зависимостей позволяет писать модульный и тестируемый код, и Guice в этом помогает. Чтобы воспользоваться им в нашей ситуации, нам сначала нужно сопоставить интерфейсы с их реализациями. Это делается в модуле Guice, который является обычным Java-классом, реализующим интерфейс <code>Module</code>:</p>
+<pre class="sourceCode java"><code class="sourceCode java">  <span class="kw">public</span> <span class="kw">class</span> BillingModule <span class="kw">extends</span> AbstractModule {
+    <span class="fu">@Override</span> 
+    <span class="kw">protected</span> <span class="dt">void</span> <span class="fu">configure</span>() {
+      <span class="fu">bind</span>(TransactionLog.<span class="fu">class</span>).<span class="fu">to</span>(DatabaseTransactionLog.<span class="fu">class</span>);
+      <span class="fu">bind</span>(CreditCardProcessor.<span class="fu">class</span>).<span class="fu">to</span>(PaypalCreditCardProcessor.<span class="fu">class</span>);
+      <span class="fu">bind</span>(BillingService.<span class="fu">class</span>).<span class="fu">to</span>(RealBillingService.<span class="fu">class</span>);
+    }
+  }</code></pre>
+<p>Также мы добавим аннотацию <code>@Inject</code> к конструктору <code>RealBillingService</code>, чтобы Guice знал, что нужно использовать именно его. Guice, пользуясь сигнатурой такого конструктора, распознает типы параметров и создаст необходимые для них объекты автоматически.</p>
+<pre class="sourceCode java"><code class="sourceCode java">  <span class="kw">public</span> <span class="kw">class</span> RealBillingService <span class="kw">implements</span> BillingService {
+    <span class="kw">private</span> <span class="dt">final</span> CreditCardProcessor processor;
+    <span class="kw">private</span> <span class="dt">final</span> TransactionLog transactionLog;
+  
+    <span class="fu">@Inject</span>
+    <span class="kw">public</span> <span class="fu">RealBillingService</span>(CreditCardProcessor processor,
+        TransactionLog transactionLog) {
+      <span class="kw">this</span>.<span class="fu">processor</span> = processor;
+      <span class="kw">this</span>.<span class="fu">transactionLog</span> = transactionLog;
+    }
+  
+    <span class="kw">public</span> Receipt <span class="fu">chargeOrder</span>(PizzaOrder order, CreditCard creditCard) {
+      <span class="kw">try</span> {
+        ChargeResult result = processor.<span class="fu">charge</span>(creditCard, order.<span class="fu">getAmount</span>());
+        transactionLog.<span class="fu">logChargeResult</span>(result);
+  
+        <span class="kw">return</span> result.<span class="fu">wasSuccessful</span>()
+            ? Receipt.<span class="fu">forSuccessfulCharge</span>(order.<span class="fu">getAmount</span>())
+            : Receipt.<span class="fu">forDeclinedCharge</span>(result.<span class="fu">getDeclineMessage</span>());
+       } <span class="kw">catch</span> (UnreachableException e) {
+        transactionLog.<span class="fu">logConnectException</span>(e);
+        <span class="kw">return</span> Receipt.<span class="fu">forSystemFailure</span>(e.<span class="fu">getMessage</span>());
+      }
+    }
+  }</code></pre>
+<p>Наконец, объединим всё вместе. Для получения экземпляров любого из сконфигурированных классов используется класс <code>Injector</code>:</p>
+<pre class="sourceCode java"><code class="sourceCode java">    <span class="kw">public</span> <span class="dt">static</span> <span class="dt">void</span> <span class="fu">main</span>(String[] args) {
+      Injector injector = Guice.<span class="fu">createInjector</span>(<span class="kw">new</span> <span class="fu">BillingModule</span>());
+      BillingService billingService = injector.<span class="fu">getInstance</span>(BillingService.<span class="fu">class</span>);
+      ...
+    }</code></pre>
+<p>В следующем разделе объясняется, как это работает.</p>
+<h1 id="введение"><a href="#введение"><span class="header-section-number">2</span> Введение</a></h1>
+<p>При использовании паттерна внедрения зависимостей объекты принимают свои зависимости через конструктор. Поэтому, чтобы создать объект, сначала нужно создать его зависимости. Однако, чтобы создать каждую зависимость в отдельности, нужно, в свою очередь, создать /её/ зависимости. Таким образом, на самом деле, нам нужно создать <em>граф зависимостей</em>.</p>
+<p>Создание графов объектов вручную очень трудоёмко, чревато ошибками и усложняет тестирование. Guice может создать граф объектов за нас. Но сначала Guice нужно сконфигурировать, чтобы он создал граф именно так, как нужно.</p>
+<p>Для иллюстрации возьмём класс <code>RealBillingService</code>, который принимает в качестве зависимостей два интерфейса, <code>CreditCardProcessor</code> и <code>TransactionLog</code>. Чтобы обозначить, что конструктор <code>RealBillingService</code>’а должен вызываться Guice’ом, мы помечаем его аннотацией <code>@Inject</code>:</p>
+<pre class="sourceCode java"><code class="sourceCode java">  <span class="kw">class</span> RealBillingService <span class="kw">implements</span> BillingService {
+    <span class="kw">private</span> <span class="dt">final</span> CreditCardProcessor processor;
+    <span class="kw">private</span> <span class="dt">final</span> TransactionLog transactionLog;
+  
+    <span class="fu">@Inject</span>
+    <span class="fu">RealBillingService</span>(CreditCardProcessor processor, TransactionLog transactionLog) {
+      <span class="kw">this</span>.<span class="fu">processor</span> = processor;
+      <span class="kw">this</span>.<span class="fu">transactionLog</span> = transactionLog;
+    }
+  
+    <span class="fu">@Override</span>
+    <span class="kw">public</span> Receipt <span class="fu">chargeOrder</span>(PizzaOrder order, CreditCard creditCard) {
+      ...
+    }
+  }</code></pre>
+<p>Мы хотим создать <code>RealBillingService</code> с вполне конкретными зависимостями: <code>PaypalCreditCardProcessor</code> и <code>DatabaseTransactionLog</code>. Guice использует <strong>привязки</strong> (<strong>биндинги</strong>), чтобы установить соответствие между типами (интерфейсами) и их конкретными реализациями. <strong>Модуль</strong> — это набор привязок, выраженных с помощью вызовов методов, напоминающих простой английский:</p>
+<pre class="sourceCode java"><code class="sourceCode java"><span class="kw">public</span> <span class="kw">class</span> BillingModule <span class="kw">extends</span> AbstractModule {
+  <span class="fu">@Override</span> 
+  <span class="kw">protected</span> <span class="dt">void</span> <span class="fu">configure</span>() {
+
+     <span class="co">/*</span>
+<span class="co">      * Здесь мы указываем Guice'у, что где бы он не увидел зависимость на интерфейс TransactionLog,</span>
+<span class="co">      * он должен её разрешить с использованием класса DatabaseTransactionLog.</span>
+<span class="co">      */</span>
+    <span class="fu">bind</span>(TransactionLog.<span class="fu">class</span>).<span class="fu">to</span>(DatabaseTransactionLog.<span class="fu">class</span>);
+
+     <span class="co">/*</span>
+<span class="co">      * Аналогично, эта привязка указывает, что если интерфейс CreditCardProcessor используется</span>
+<span class="co">      * где-либо в качестве зависимости, Guice должен будет использовать класс PaypalCreditCardProcessor.</span>
+<span class="co">      */</span>
+    <span class="fu">bind</span>(CreditCardProcessor.<span class="fu">class</span>).<span class="fu">to</span>(PaypalCreditCardProcessor.<span class="fu">class</span>);
+  }
+}</code></pre>
+<p>Модули — это строительный материал для <strong>инжектора</strong> (<strong>injector</strong>), класса, который в Guice занимается созданием графов объектов. Сначала мы создаём инжектор с использованием модуля, а потом мы можем его использовать для получения экземпляра <code>RealBillingService</code>:</p>
+<pre class="sourceCode java"><code class="sourceCode java">   <span class="kw">public</span> <span class="dt">static</span> <span class="dt">void</span> <span class="fu">main</span>(String[] args) {
+      <span class="co">/*</span>
+<span class="co">       * Guice.createInjector() берёт набор модулей и возвращает готовый инстанс инжектора.</span>
+<span class="co">       * Большинство приложений вызывают этот метод единственный раз, в коде main-метода.</span>
+<span class="co">       */</span>
+      Injector injector = Guice.<span class="fu">createInjector</span>(<span class="kw">new</span> <span class="fu">BillingModule</span>());
+  
+      <span class="co">/*</span>
+<span class="co">       * Теперь, раз у нас есть инжектор, мы можем создавать объекты.</span>
+<span class="co">       */</span>
+      RealBillingService billingService = injector.<span class="fu">getInstance</span>(RealBillingService.<span class="fu">class</span>);
+      ...
+    }</code></pre>
+<p>Создав здесь <code>billingService</code>, мы на самом деле создали маленький граф объектов. В этом графе содержатся сам биллинговый сервис, а также обработчик кредиток и лог транзакций, от которых сервис зависит.</p>
+<h1 id="привязки"><a href="#привязки"><span class="header-section-number">3</span> Привязки</a></h1>
+<p>Задача инжектора — собрать граф объектов. Мы говорим ему, что хотим получить экземпляр заданного типа, и он автоматически выясняет, что именно нужно создать, разрешает зависимости и связывает всё вместе. Чтобы указать, каким конкретно образом следует разрешать зависимости, инжектор нужно сконфигурировать с помощью привязок.</p>
+<p>Привязки создаются с помощью модулей. Для этого проще всего унаследовать абстрактный класс <code>AbstractModule</code> и переопределить его метод <code>configure()</code>. В теле этого метода нужно вызывать метод <code>bind()</code> чтобы описать каждую привязку. Эти методы проверяются компилятором на наличие ошибок типов, поэтому компилятор подскажет нам, если мы ошиблись в типах. Как только мы описали модуль, его можно передать в метод <code>Guice.createInjector()</code>, чтобы создать инжектор.</p>
+<p>Наиболее используемыми являются следующие виды привязок: <em>компоновочные</em> (<em>linked</em>), <em>экземплярные</em> (<em>instance</em>), <em>@Provides-методы</em>, <em>привязки провайдеров</em> (<em>providers</em>), <em>привязки конструкторов</em> (<em>constructor bindings</em>) и <em>бесцелевые</em> (<em>untargetted</em>) <em>привязки</em>.</p>
+<p>Помимо этого, Guice поддерживает некоторое количество <em>встроенных привязок</em>. Также, если инжектор обнаружил зависимость, привязка для которой не описан в его конфигурации, он попытается создать <em>неявную</em> (<em>just-in-time</em>) <em>привязку</em>. Ещё Guice умеет внедрять зависимости на провайдеров к другим привязкам.</p>
+<h2 id="компоновочные-привязки"><a href="#компоновочные-привязки"><span class="header-section-number">3.1</span> Компоновочные привязки</a></h2>
+<p><strong>Компоновочные</strong> (или <strong>обычные</strong>) привязки связывают тип с его реализацией. В следующем примере интерфейс <code>TransactionLog</code> связывется со своей реализацией <code>DatabaseTransactionLog</code>:</p>
+<pre class="sourceCode java"><code class="sourceCode java">  <span class="kw">public</span> <span class="kw">class</span> BillingModule <span class="kw">extends</span> AbstractModule {
+    <span class="fu">@Override</span> 
+    <span class="kw">protected</span> <span class="dt">void</span> <span class="fu">configure</span>() {
+      <span class="fu">bind</span>(TransactionLog.<span class="fu">class</span>).<span class="fu">to</span>(DatabaseTransactionLog.<span class="fu">class</span>);
+    }
+  }</code></pre>
+<p>Теперь, когда мы вызываем <code>Injector.getInstance(TransactionLog.class)</code>, либо если инжектор сам обнаружит в графе объектов зависимость от <code>TransactionLog</code>, то он автоматически будет использовать <code>DatabaseTransactionLog</code>. В компоновочных привязках связь может идти от типа к любому из подтипов, например, от интерфейса к его реализации или от класса к его наследнику.</p>
+<p>Компоновочные привязки могут образовывать цепочки:</p>
+<pre class="sourceCode java"><code class="sourceCode java">  <span class="kw">public</span> <span class="kw">class</span> BillingModule <span class="kw">extends</span> AbstractModule {
+    <span class="fu">@Override</span> 
+    <span class="kw">protected</span> <span class="dt">void</span> <span class="fu">configure</span>() {
+      <span class="fu">bind</span>(TransactionLog.<span class="fu">class</span>).<span class="fu">to</span>(DatabaseTransactionLog.<span class="fu">class</span>);
+      <span class="fu">bind</span>(DatabaseTransactionLog.<span class="fu">class</span>).<span class="fu">to</span>(MySqlDatabaseTransactionLog.<span class="fu">class</span>);
+    }
+  }</code></pre>
+<p>В таком случае, когда нам или инжектору понадобится реализация интерфейса <code>TransactionLog</code>, будет использован класс <code>MySqlDatabaseTransactionLog</code>.</p>
+<h2 id="привязочные-аннотации"><a href="#привязочные-аннотации"><span class="header-section-number">3.2</span> Привязочные аннотации</a></h2>
+<p>Иногда требуется создать несколько привязок одного и того же типа. Например, одновременно в программе может потребоваться использовать обработчик кредитных кард PayPal и обработчик Google Checkout. Для этого используются <strong>привязочные аннотации</strong>. Аннотация и тип вместе определяют привязку единственным образом. Такая пара называется <strong>ключом</strong>.</p>
+<p>Определение привязочной аннотации потребует нескольких строк кода и импортов. Поместим следующий код в отдельный java-файл:</p>
+<pre class="sourceCode java"><code class="sourceCode java">   <span class="kw">package example.pizza;</span>
+   
+   <span class="kw">import com.google.inject.BindingAnnotation;</span>
+   <span class="kw">import java.lang.annotation.Target;</span>
+   <span class="kw">import java.lang.annotation.Retention;</span>
+   <span class="kw">import static java.lang.annotation.RetentionPolicy.RUNTIME;</span>
+   <span class="kw">import static java.lang.annotation.ElementType.PARAMETER;</span>
+   <span class="kw">import static java.lang.annotation.ElementType.FIELD;</span>
+   <span class="kw">import static java.lang.annotation.ElementType.METHOD;</span>
+   
+   <span class="fu">@BindingAnnotation</span>
+   <span class="fu">@Target</span>({FIELD, PARAMETER, METHOD})
+   <span class="fu">@Retention</span>(RUNTIME)
+   <span class="kw">public</span> <span class="kw">@interface</span> PayPal {
+   }</code></pre>
+<p>Знать, что означают все эти дополнительные мета-аннотации, необязательно, но если интересно, то вот описание: - <code>@BindingAnnotation</code> указывает Guice, что это привязочная аннотация; если один и тот же идентификатор помечен двумя и более привязочными аннотациями, то Guice выкинет ошибку; - <code>@Target({FIELD, PARAMETER, METHOD})</code> указывает, где можно применять аннотацию; это не даст случайно применить <code>@PayPal</code> где-то, где это не имеет смысла; - <code>@Retention(RUNTIME)</code> делает аннотацию доступной для анализа во время выполнения программы.</p>
+<p>Чтобы объявить зависимость на аннотированную привязку, достаточно просто применить аннотацию на внедряемый параметр:</p>
+<pre class="sourceCode java"><code class="sourceCode java">  <span class="kw">public</span> <span class="kw">class</span> RealBillingService <span class="kw">implements</span> BillingService {
+  
+    <span class="fu">@Inject</span>
+    <span class="kw">public</span> <span class="fu">RealBillingService</span>(<span class="fu">@PayPal</span> CreditCardProcessor processor, TransactionLog transactionLog) {
+      ...
+    }
+  }</code></pre>
+<p>Чтобы объявить саму аннотированную привязку, нужно воспользоваться необязательной конструкцией <code>annotatedWith</code> в объявлении <code>bind()</code>:</p>
+<pre class="sourceCode java"><code class="sourceCode java">  <span class="fu">bind</span>(CreditCardProcessor.<span class="fu">class</span>)
+      .<span class="fu">annotatedWith</span>(PayPal.<span class="fu">class</span>)
+      .<span class="fu">to</span>(PayPalCreditCardProcessor.<span class="fu">class</span>);</code></pre>
+<h3 id="named"><a href="#named"><span class="header-section-number">3.2.1</span> <code>@Named</code></a></h3>
+<p>По умолчанию в Guice есть аннотация <code>@Named</code>, которая принимает строку в качестве параметра:</p>
+<pre class="sourceCode java"><code class="sourceCode java">  <span class="kw">public</span> <span class="kw">class</span> RealBillingService <span class="kw">implements</span> BillingService {
+  
+    <span class="fu">@Inject</span>
+    <span class="kw">public</span> <span class="fu">RealBillingService</span>(<span class="fu">@Named</span>(<span class="st">&quot;Checkout&quot;</span>) CreditCardProcessor processor, TransactionLog transactionLog) {
+      ...
+    }
+  }</code></pre>
+<p>Чтобы воспользоваться такой привязкой, нужно воспользоваться методом =Names.named()=, передав результат его вызова в <code>annotatedWith</code>:</p>
+<pre class="sourceCode java"><code class="sourceCode java">  <span class="fu">bind</span>(CreditCardProcessor.<span class="fu">class</span>)
+      .<span class="fu">annotatedWith</span>(Names.<span class="fu">named</span>(<span class="st">&quot;Checkout&quot;</span>))
+      .<span class="fu">to</span>(CheckoutCreditCardProcessor.<span class="fu">class</span>);</code></pre>
+<p>Поскольку компилятор не проверяет строки, лучше использовать <code>@Named</code> как можно реже.</p>
+<h3 id="привязочные-аннотации-с-атрибутами"><a href="#привязочные-аннотации-с-атрибутами"><span class="header-section-number">3.2.2</span> Привязочные аннотации с атрибутами</a></h3>
+<p>Guice поддерживает создание и использование привязочных аннотаций, с которыми связаны конкретные значения (как у <code>@Named</code>). В тех редких случаях, когда это может понадобиться, нужно сделать следующее: 1. создать интерфейс аннотации; 2. создать класс, “реализующий” интерфейс аннотации; при определении методов <code>hashCode()</code> и <code>equals()</code> следует пользоваться <a href="http://java.sun.com/javase/6/docs/api/java/lang/annotation/Annotation.html">документацией</a>; 3. передать экземпляр этого класса в метод <code>annotatedWith()</code> при объявлении привязки.</p>
+<h2 id="экземплярные-привязки"><a href="#экземплярные-привязки"><span class="header-section-number">3.3</span> Экземплярные привязки</a></h2>
+<p>Тип можно привязать к конкретному объекту, принадлежащему этому типу. Это полезно только в том случае, когда требуется привязывать объекты без собственных зависимостей, такие, как объекты-значения.</p>
+<pre class="sourceCode java"><code class="sourceCode java">      <span class="fu">bind</span>(String.<span class="fu">class</span>)
+          .<span class="fu">annotatedWith</span>(Names.<span class="fu">named</span>(<span class="st">&quot;JDBC URL&quot;</span>))
+          .<span class="fu">toInstance</span>(<span class="st">&quot;jdbc:mysql://localhost/pizza&quot;</span>);
+      <span class="fu">bind</span>(Integer.<span class="fu">class</span>)
+          .<span class="fu">annotatedWith</span>(Names.<span class="fu">named</span>(<span class="st">&quot;login timeout seconds&quot;</span>))
+          .<span class="fu">toInstance</span>(<span class="dv">10</span>);</code></pre>
+<p>Избегайте использования экземплярных привязок с объектами, которые относительно сложно создавать, потому что это может замедлить загрузку вашего приложения. Вместо этого можно использовать <code>@Provides</code>-методы.</p>
+<h2 id="provides-методы"><a href="#provides-методы"><span class="header-section-number">3.4</span> <code>@Provides</code>-методы</a></h2>
+<p>Когда нужно сконструировать объект-зависимость нестандартным способом, можно воспользоваться <code>@Provides</code>-методом. Этот метод должен быть объявлен в модуле и должен быть аннотирован как <code>@Provides</code>. Такой метод обявляет привязку аналогично вызову метода <code>bind()</code>. Возвращаемый тип метода становится типом привязки; когда инжектору понадобится зависимость такого типа, будет вызван этот метод.</p>
+<pre class="sourceCode java"><code class="sourceCode java">  <span class="kw">public</span> <span class="kw">class</span> BillingModule <span class="kw">extends</span> AbstractModule {
+    <span class="fu">@Override</span>
+    <span class="kw">protected</span> <span class="dt">void</span> <span class="fu">configure</span>() {
+      ...
+    }
+  
+    <span class="fu">@Provides</span>
+    TransactionLog <span class="fu">provideTransactionLog</span>() {
+      DatabaseTransactionLog transactionLog = <span class="kw">new</span> <span class="fu">DatabaseTransactionLog</span>();
+      transactionLog.<span class="fu">setJdbcUrl</span>(<span class="st">&quot;jdbc:mysql://localhost/pizza&quot;</span>);
+      transactionLog.<span class="fu">setThreadPoolSize</span>(<span class="dv">30</span>);
+      <span class="kw">return</span> transactionLog;
+    }
+  }</code></pre>
+<p>Если помимо <code>@Provides</code> на методе присутствует ещё некоторая привязочная аннотация, например, <code>@Named(&quot;Checkout&quot;)</code> или <code>@PayPal</code>, Guice создаст аннотированную привязку.</p>
+<p>Зависимости для создания объекта можно передать через параметры метода. Перед его вызовом инжектор их разрешит:</p>
+<pre class="sourceCode java"><code class="sourceCode java">  <span class="fu">@Provides</span> <span class="fu">@PayPal</span>
+  CreditCardProcessor <span class="fu">providePayPalCreditCardProcessor</span>(<span class="fu">@Named</span>(<span class="st">&quot;PayPal API key&quot;</span>) String apiKey) {
+    PayPalCreditCardProcessor processor = <span class="kw">new</span> <span class="fu">PayPalCreditCardProcessor</span>();
+    processor.<span class="fu">setApiKey</span>(apiKey);
+    <span class="kw">return</span> processor;
+  }</code></pre>
+<h3 id="выбрасывание-исключений"><a href="#выбрасывание-исключений"><span class="header-section-number">3.4.1</span> Выбрасывание исключений</a></h3>
+<p>Guice не позволяет выбрасывать исключения из <code>@Provides</code>-методов. Все исключения, выброшенные этими методами, будут оборачиваться в <code>ProvisionException</code>. Выбрасывание исключений из <code>@Provides</code>-методов, как checked-, так и unchecked- — плохая практика. Если всё же для чего-то это понадобится, то можно воспользоваться расширением <em>ThrowingProviders</em> и аннотацией, которую оно предоставляет, <code>@CheckedProvides</code>.</p>
+<h2 id="привязки-провайдеров"><a href="#привязки-провайдеров"><span class="header-section-number">3.5</span> Привязки провайдеров</a></h2>
+<p>Как только <code>@Provides</code>-методы становятся достаточно сложными, появляется смысл вынести их в отдельные классы. Такие классы-провайдеры должны реализовывать очень простой интерфейс <code>Provider</code>: <code>java   public interface Provider&lt;T&gt; {     T get();   }</code></p>
+<p>Реализации этого интерфейса могут иметь свои зависимости, которые можно получить через помеченный аннотацией <code>@Inject</code> конструктор.</p>
+<pre class="sourceCode java"><code class="sourceCode java">  <span class="kw">public</span> <span class="kw">class</span> DatabaseTransactionLogProvider <span class="kw">implements</span> Provider&lt;TransactionLog&gt; {
+    <span class="kw">private</span> <span class="dt">final</span> Connection connection;
+  
+    <span class="fu">@Inject</span>
+    <span class="kw">public</span> <span class="fu">DatabaseTransactionLogProvider</span>(Connection connection) {
+      <span class="kw">this</span>.<span class="fu">connection</span> = connection;
+    }
+  
+    <span class="kw">public</span> TransactionLog <span class="fu">get</span>() {
+      DatabaseTransactionLog transactionLog = <span class="kw">new</span> <span class="fu">DatabaseTransactionLog</span>();
+      transactionLog.<span class="fu">setConnection</span>(connection);
+      <span class="kw">return</span> transactionLog;
+    }
+  }</code></pre>
+<p>Теперь провайдер можно привязать с помощью конструкции <code>toProvider</code>:</p>
+<pre class="sourceCode java"><code class="sourceCode java">  <span class="kw">public</span> <span class="kw">class</span> BillingModule <span class="kw">extends</span> AbstractModule {
+    <span class="fu">@Override</span>
+    <span class="kw">protected</span> <span class="dt">void</span> <span class="fu">configure</span>() {
+      <span class="fu">bind</span>(TransactionLog.<span class="fu">class</span>)
+          .<span class="fu">toProvider</span>(DatabaseTransactionLogProvider.<span class="fu">class</span>);
+    }
+  }</code></pre>
+<p>Если провайдеры достаточно сложны, на них тоже следует писать модульные тесты.</p>
+<h3 id="выбрасывание-исключений-1"><a href="#выбрасывание-исключений-1"><span class="header-section-number">3.5.1</span> Выбрасывание исключений</a></h3>
+<p>Guice не позволяет выбрасывать исключения из провайдеров. Интерфейс <code>Provider</code> запрещает использование checked-исключений. Unchecked-исключения будут обёрнуты в <code>ProvisionException</code> или в <code>CreationException</code>, что может помешать созданию инжектора. Если по какой-то причине вам всё же понадобится выкидывать исключения из провайдеров, можно воспользоваться расширением <em>ThrowingProviders</em>.</p>
+<h2 id="бесцелевые-привязки"><a href="#бесцелевые-привязки"><span class="header-section-number">3.6</span> Бесцелевые привязки</a></h2>
+<p>Можно создавать привязки без указания цели. Наиболее полезно это при использовании классов, помеченных аннотациями <code>@ImplementedBy</code> или <code>@ProvidedBy</code>. Бесцелевая привязка сообщает инжектору, что ему необходимо заранее подготовить зависимости для указанного класса. Такие привязки объявляются без конструкции <code>to()</code>:</p>
+<pre class="sourceCode java"><code class="sourceCode java">      <span class="fu">bind</span>(MyConcreteClass.<span class="fu">class</span>);
+      <span class="fu">bind</span>(AnotherConcreteClass.<span class="fu">class</span>).<span class="fu">in</span>(Singleton.<span class="fu">class</span>);</code></pre>
+<p>Если используются привязочные аннотации, то цель привязки нужно указывать в любом случае, даже если класс привязывается сам к себе:</p>
+<pre class="sourceCode java"><code class="sourceCode java">      <span class="fu">bind</span>(MyConcreteClass.<span class="fu">class</span>).<span class="fu">annotatedWith</span>(Names.<span class="fu">named</span>(<span class="st">&quot;foo&quot;</span>)).<span class="fu">to</span>(MyConcreteClass.<span class="fu">class</span>);
+      <span class="fu">bind</span>(AnotherConcreteClass.<span class="fu">class</span>).<span class="fu">annotatedWith</span>(Names.<span class="fu">named</span>(<span class="st">&quot;foo&quot;</span>)).<span class="fu">to</span>(AnotherConcreteClass.<span class="fu">class</span>).<span class="fu">in</span>(Singleton.<span class="fu">class</span>);</code></pre>
+<h2 id="привязки-конструкторов"><a href="#привязки-конструкторов"><span class="header-section-number">3.7</span> Привязки конструкторов</a></h2>
+<p>Иногда бывает необходимо привязать тип к некоторому конкретному конструктору. Например, может быть так, что аннотацией <code>@Inject</code> нельзя пометить нужный конструктор, потому что класс принадлежит сторонней библиотеке, либо из-за того, что для процесса внедрения зависимостей используется несколько конструкторов. <code>@Provides</code>-методы решают эти проблемы наилучшим образом: вызывая конструктор явно, не требуется прибегать к отражению и связанных с ним проблем. Но у этого подхода есть ограничения, в частности, вручную созданные объекты не могут участвовать в АОП.</p>
+<p>В качестве компенcации Guice предоставляет привязки <code>toConstructor()</code>. Для их использования нужно получить конструктор с помощью отражения и обработать исключение, выбрасываемое, когда такого конструктора нет:</p>
+<pre class="sourceCode java"><code class="sourceCode java">  <span class="kw">public</span> <span class="kw">class</span> BillingModule <span class="kw">extends</span> AbstractModule {
+    <span class="fu">@Override</span> 
+    <span class="kw">protected</span> <span class="dt">void</span> <span class="fu">configure</span>() {
+      <span class="kw">try</span> {
+        <span class="fu">bind</span>(TransactionLog.<span class="fu">class</span>).<span class="fu">toConstructor</span>(
+            DatabaseTransactionLog.<span class="fu">class</span>.<span class="fu">getConstructor</span>(DatabaseConnection.<span class="fu">class</span>));
+      } <span class="kw">catch</span> (NoSuchMethodException e) {
+        <span class="fu">addError</span>(e);
+      }
+    }
+  }</code></pre>
+<p>Из примера видно, что у класса <code>DatabaseTransactionLog</code> должен быть конструктор, который принимает единственный параметр типа <code>DatabaseConnection</code>. Аннотация <code>@Inject</code> на этом конструкторе необязательна. Для разрешения зависимости Guice вызовет указанный конструктор.</p>
+<p>Каждая привязка конструктора обладает собственной областью видимости. Если создать несколько синглтонных привязок к одному и тому же конструктору, каждая будет давать собственный экземпляр класса.</p>
+<h2 id="встроенные-привязки"><a href="#встроенные-привязки"><span class="header-section-number">3.8</span> Встроенные привязки</a></h2>
+<p>Кроме явных и неявных (just-in-time) привязок инжектор Guice автоматически объявляет некоторые стандартные привязки. Только инжектор может объявлять такие привязки; попытка создать их вручную приведёт к ошибке.</p>
+<h3 id="логгеры"><a href="#логгеры"><span class="header-section-number">3.8.1</span> Логгеры</a></h3>
+<p>Guice предлагает встроенную привязку к <code>java.util.logging.Logger</code> для сокращения шаблонного кода. Эта привязка автоматически устанавливает в качестве имени логгера имя класса, в который внедряется логгер.</p>
+<pre class="sourceCode java"><code class="sourceCode java">  <span class="fu">@Singleton</span>
+  <span class="kw">public</span> <span class="kw">class</span> ConsoleTransactionLog <span class="kw">implements</span> TransactionLog {
+  
+    <span class="kw">private</span> <span class="dt">final</span> Logger logger;
+  
+    <span class="fu">@Inject</span>
+    <span class="kw">public</span> <span class="fu">ConsoleTransactionLog</span>(Logger logger) {
+      <span class="kw">this</span>.<span class="fu">logger</span> = logger;
+    }
+  
+    <span class="kw">public</span> <span class="dt">void</span> <span class="fu">logConnectException</span>(UnreachableException e) {
+      <span class="co">/* the message is logged to the &quot;ConsoleTransacitonLog&quot; logger */</span>
+      logger.<span class="fu">warning</span>(<span class="st">&quot;Connect exception failed, &quot;</span> + e.<span class="fu">getMessage</span>());
+    }
+  }</code></pre>
+<h3 id="инжектор"><a href="#инжектор"><span class="header-section-number">3.8.2</span> Инжектор</a></h3>
+<p>Бывает так (например, в случае написания фреймворков), что используемые типы неизвестны до времени выполнения. В этих редких ситуациях можно внедрять сам инжектор. Зависимости кода, который использует инжектор как зависимость, становятся неявными, поэтому такой подход следует использовать как можно реже.</p>
+<h3 id="провайдеры"><a href="#провайдеры"><span class="header-section-number">3.8.3</span> Провайдеры</a></h3>
+<p>Для любого типа, который известен Guice, можно внедрять провайдер этого типа. Детали такого способа описаны далее.</p>
+<h3 id="typeliteralы"><a href="#typeliteralы"><span class="header-section-number">3.8.4</span> <code>TypeLiteral</code>’ы</a></h3>
+<p>Guice обладает полной информацией о типах всех внедряемых классов. Если требуется внедрить параметризованный тип, то вместе с ним можно внедрить экземпляр класса <code>TypeLiteral&lt;T&gt;</code>, чтобы получить информацию о типе во время выполнения.</p>
+<h3 id="стадии"><a href="#стадии"><span class="header-section-number">3.8.5</span> Стадии</a></h3>
+<p>Guice поддерживает стадии, которые нужны для того, чтобы можно было различать зависимости времени разработки и продакшена.</p>
+<h3 id="membersinjectorы"><a href="#membersinjectorы"><span class="header-section-number">3.8.6</span> <code>MembersInjector</code>’ы</a></h3>
+<p>При использовании привязок к провайдерам или при написании расширений иногда требуется внедрять зависимости в объект, созданный вручную. Для этого можно объявить зависимость на класс <code>MembersInjector&lt;T&gt;</code>, где <code>T</code> — тип объекта, а затем вызывать метод <code>membersInjector.injectMembers(myNewObject)</code>.</p>
+<h2 id="неявные-just-in-time-привязки"><a href="#неявные-just-in-time-привязки"><span class="header-section-number">3.9</span> Неявные (just-in-time) привязки</a></h2>
+<p>Для того, чтобы создать объект некоторого типа, инжектору нужно описание, как имено это сделать, то есть привязка. Привязки, заданные в модулях, называются <em>явными</em>, и инжектор по возможности использует их. Если же требуется создать объект типа, который не привязан явно, инжектор попробует создать <em>неявную</em> (<em>just-in-time</em>) <em>привязку</em>. Другими словами, инжектор попытается создать нужный объект, применив некоторую эвристику, позволяющую отыскать подходящую реализацию типа.</p>
+<h3 id="инжекционные-конструкторы"><a href="#инжекционные-конструкторы"><span class="header-section-number">3.9.1</span> Инжекционные конструкторы</a></h3>
+<p>Guice может создавать привязки для конкретных типов, используя их <em>инжекционный</em> конструктор. Это может быть либо публичный конструктор без параметров, либо конструктор, помеченный аннотацией <code>@Inject</code>:</p>
+<pre class="sourceCode java"><code class="sourceCode java">  <span class="kw">public</span> <span class="kw">class</span> PayPalCreditCardProcessor <span class="kw">implements</span> CreditCardProcessor {
+    <span class="kw">private</span> <span class="dt">final</span> String apiKey;
+  
+    <span class="fu">@Inject</span>
+    <span class="kw">public</span> <span class="fu">PayPalCreditCardProcessor</span>(<span class="fu">@Named</span>(<span class="st">&quot;PayPal API key&quot;</span>) String apiKey) {
+      <span class="kw">this</span>.<span class="fu">apiKey</span> = apiKey;
+    }
+  }</code></pre>
+<p>Guice не будет создавать нестатические вложенные классы, поскольку у них есть неявная ссылка на экземпляр внешнего класса, которую нельзя внедрить.</p>
+<h3 id="implementedby"><a href="#implementedby"><span class="header-section-number">3.9.2</span> <code>@ImplementedBy</code></a></h3>
+<p>Типы можно помечать аннотациями, чтобы указать инжектору, какую реализацию типа по умолчанию нужно использовать. Аннотация <code>@ImplementedBy</code>, указывая подтип, который нужно использовать для внедрения данного типа, действует как <strong>компоновочная привязка</strong>:</p>
+<pre class="sourceCode java"><code class="sourceCode java">  <span class="fu">@ImplementedBy</span>(PayPalCreditCardProcessor.<span class="fu">class</span>)
+  <span class="kw">public</span> <span class="kw">interface</span> CreditCardProcessor {
+    ChargeResult <span class="fu">charge</span>(String amount, CreditCard creditCard)
+        <span class="kw">throws</span> UnreachableException;
+  }</code></pre>
+<p>Аннотация в этом примере эквивалентна следующей конструкции <code>bind()</code>:</p>
+<pre class="sourceCode java"><code class="sourceCode java">  <span class="fu">bind</span>(CreditCardProcessor.<span class="fu">class</span>).<span class="fu">to</span>(PayPalCreditCardProcessor.<span class="fu">class</span>);</code></pre>
+<p>Если тип как участвует в <code>bind()</code> (в качестве первого аргумента), так и помечен аннотацией <code>@ImplementedBy</code>, то будет использована привязка через <code>bind()</code>. Аннотация же обозначает некоторую реализацию по умолчанию, которую можно переопределить с помощью явной привязки. <code>@ImplementedBy</code> следует использовать с осторожностью, потому что она создаёт зависимость времени компиляции от интерфейса к его реализации.</p>
+<h3 id="providedby"><a href="#providedby"><span class="header-section-number">3.9.3</span> <code>@ProvidedBy</code></a></h3>
+<p>Аннотация <code>@ProvidedBy</code> указывает инжектору, что следует использовать указанный класс провайдера для создания объектов типа:</p>
+<pre class="sourceCode java"><code class="sourceCode java">  <span class="fu">@ProvidedBy</span>(DatabaseTransactionLogProvider.<span class="fu">class</span>)
+  <span class="kw">public</span> <span class="kw">interface</span> TransactionLog {
+    <span class="dt">void</span> <span class="fu">logConnectException</span>(UnreachableException e);
+    <span class="dt">void</span> <span class="fu">logChargeResult</span>(ChargeResult result);
+  }</code></pre>
+<p>Эта аннотация эквивалентна следующей привязке к провайдеру:</p>
+<pre class="sourceCode java"><code class="sourceCode java">  <span class="fu">bind</span>(TransactionLog.<span class="fu">class</span>)
+      .<span class="fu">toProvider</span>(DatabaseTransactionLogProvider.<span class="fu">class</span>);</code></pre>
+<p>Как и в случае с <code>@ImplementedBy</code>, если тип одновременно аннотирован <code>@ProvidedBy</code> и привязан с помощью конструкции <code>bind()</code>, выигрывает последняя.</p>
+<h1 id="области-видимости"><a href="#области-видимости"><span class="header-section-number">4</span> Области видимости</a></h1>
+<p>По умолчанию инжектор Guice каждый раз при внедрении создаёт новый объект. Это поведение настраивается с помощью <em>областей видимости</em> (<em>scopes</em>). Области видимости позволяют использовать одни и те же объекты много раз: за всё время работы приложения (<code>@Singleton</code>), за время сессии (<code>@SessionScoped</code>) или запроса (<code>@RequestScoped</code>). В комплект Guice входит расширение, позволяющее создавать сервлеты и определяющее области видимости для веб-приложений. Также возможно создавать свои области видимости.</p>
+<h2 id="применение-областей-видимости"><a href="#применение-областей-видимости"><span class="header-section-number">4.1</span> Применение областей видимости</a></h2>
+<p>Для определения областей в Guice используются аннотации. Область видимости для типа можно указать, пометив аннотацией класс-реализацию. В таком случае аннотация служит дополнительной документацией. Например, из наличия аннотации <code>@Singleton</code> следует, что класс должен быть потокобезопасным.</p>
+<pre class="sourceCode java"><code class="sourceCode java">  <span class="fu">@Singleton</span>
+  <span class="kw">public</span> <span class="kw">class</span> InMemoryTransactionLog <span class="kw">implements</span> TransactionLog {
+    <span class="co">/* всё, что здесь объявлено, должно быть потокобезопасным! */</span>
+  }</code></pre>
+<p>Также области видимости можно настраивать в конструкции <code>bind()</code>:</p>
+<pre class="sourceCode java"><code class="sourceCode java">    <span class="fu">bind</span>(TransactionLog.<span class="fu">class</span>).<span class="fu">to</span>(InMemoryTransactionLog.<span class="fu">class</span>).<span class="fu">in</span>(Singleton.<span class="fu">class</span>);</code></pre>
+<p>А также аннотацией на <code>@Provides</code>-методах:</p>
+<pre class="sourceCode java"><code class="sourceCode java">    <span class="fu">@Provides</span> <span class="fu">@Singleton</span>
+    TransactionLog <span class="fu">provideTransactionLog</span>() {
+      ...
+    }</code></pre>
+<p>Если области видимости, указанные непосредственно на классе и с помощью <code>bind()</code>, конфликтуют, то будет выбрана та, что указана с помощью <code>bind()</code>. Если тип аннотирован некоторой областью, а нужно от этого избавиться, то достаточно привязать его с помощью <code>bind()</code> с областью <code>Scopes.NO_SCOPE</code>.</p>
+<p>В компоновочных привязках области видимости применяются к типу, который привязывается к реализации, а не наоборот. Например, пусть у нас есть класс <code>Applebees</code>, который реализует интерфейсы <code>Bar</code> и <code>Grill</code>. Следующие привязки позволят создать <strong>два</strong> экземпляра этого класса, по одному для каждого интерфейса, несмотря на то, что они находятся в области <code>@Singleton</code>:</p>
+<pre class="sourceCode java"><code class="sourceCode java">    <span class="fu">bind</span>(Bar.<span class="fu">class</span>).<span class="fu">to</span>(Applebees.<span class="fu">class</span>).<span class="fu">in</span>(Singleton.<span class="fu">class</span>);
+    <span class="fu">bind</span>(Grill.<span class="fu">class</span>).<span class="fu">to</span>(Applebees.<span class="fu">class</span>).<span class="fu">in</span>(Singleton.<span class="fu">class</span>);</code></pre>
+<p>Так происходит именно потому, что области видимости применяются к типу, к которому делается привязка (<code>Bar</code>, <code>Grill</code>), но не к тому, который привязывается сам (<code>Applebees</code>). Чтобы создать только один экземпляр <code>Applebees</code> даже в этом случае, следует либо пометить <code>Applebees</code> аннотацией <code>@Singleton</code>, либо объявить привязку</p>
+<pre class="sourceCode java"><code class="sourceCode java">  <span class="fu">bind</span>(Applebees.<span class="fu">class</span>).<span class="fu">in</span>(Singleton.<span class="fu">class</span>);</code></pre>
+<p>Если объявлена такая привязка, то конструкции <code>in(Singleton.class)</code> в тех привязках, что указаны выше, необязательны.</p>
+<p>Конструкция <code>in()</code> принимает либо класс аннотации области видимости (например, <code>RequestScoped.class</code>), либо экземпляр класса, “реализующего” интерфейс соответствующей аннотации, например, <code>ServletScope.REQUEST</code>:</p>
+<pre class="sourceCode java"><code class="sourceCode java">    <span class="fu">bind</span>(UserPreferences.<span class="fu">class</span>)
+        .<span class="fu">toProvider</span>(UserPreferencesProvider.<span class="fu">class</span>)
+        .<span class="fu">in</span>(ServletScopes.<span class="fu">REQUEST</span>);</code></pre>
+<p>Использование непосредственно классов аннотаций предпочтительно, потому что это позволяет использовать тот же модуль повторно в других типах приложений. Например, объект, помеченный <code>@RequestScope</code>, может находиться в области видимости HTTP-запроса в веб-приложении или в области видимости RPC-вызова в сервере API.</p>
+<h2 id="энергичные-синглтоны"><a href="#энергичные-синглтоны"><span class="header-section-number">4.2</span> Энергичные синглтоны</a></h2>
+<p>Guice предоставляет специальный синтаксис для определения синглтонов, которые должны создаваться сразу при конфигурации:</p>
+<pre class="sourceCode java"><code class="sourceCode java">    <span class="fu">bind</span>(TransactionLog.<span class="fu">class</span>).<span class="fu">to</span>(InMemoryTransactionLog.<span class="fu">class</span>).<span class="fu">asEagerSingleton</span>();</code></pre>
+<p>В случае использования энергичных синглтонов проблемы с их инициализацией всплывают раньше, что с точки зрения клиента удобнее и логичнее. С ленивыми синглтонами, однако, цикл редактирования-компиляции-запуска при разработке проходит быстрее. Для выбора подходящей стратегии можно использовать перечисление <code>Stage</code>:</p>
+<p>+———————–+——————+——————-+ | | Stage.PRODUCTION | Stage.DEVELOPMENT | |=======================+==================+===================| | .asEagerSingleton() | энергичная | энергичная | | .in(Singleton.class) | энергичная | ленивая | | .in(Scopes.SINGLETON) | энергичная | ленивая | | @Singleton | энергичная* | ленивая | +———————–+——————+——————-+ * Guice будет создавать синглтоны энергично только для тех типов, о которых он знает, то есть, для типов, указанных в модулях, переданных инжектору, а также для их транзитивных зависимостей.</p>
+<h2 id="выбор-области-видимости"><a href="#выбор-области-видимости"><span class="header-section-number">4.3</span> Выбор области видимости</a></h2>
+<p>Если рассматриваемый объект <strong>имеет состоянием</strong>, то выбор области видимости очевиден: если состояние должно распространяться на всё приложение, то следует использовать <code>@Singleton</code>; если на один запрос, то <code>@RequestScoped</code>, и т.д. Если объект <strong>не имеет состояния</strong>, а также если его создание <strong>дёшево</strong>, то задание области видимости необязательно. Если не указывать области видимости для привязки, Guice будет создавать новые экземпляры объектов каждый раз, когда они потребуются.</p>
+<p>Использование синглтонов при разработке Java-приложений довольно популярно, но синглтоны не так уж и нужны, особенно в контексте использования внедрения зависимостей. Хоть синглтоны и позволяют избежать накладных расходов на создание объекта и последующее его удаление сборщиком мусора, использование экземпляра синглтона требует синхронизации. Наиболее полезны синглтоны в следующих случаях: - объекты с состоянием, такие, как конфигурация или счётчики; - объекты, которые дорого создавать; - объекты, которые используют внешние ресурсы, например, пул соединений к базе данных.</p>
+<h2 id="области-видимости-и-многопоточность"><a href="#области-видимости-и-многопоточность"><span class="header-section-number">4.4</span> Области видимости и многопоточность</a></h2>
+<p>Классы, помеченные аннотациями <code>@Singleton</code> или <code>@SessionScoped</code>, <strong>должны быть потокобезопасны</strong>. Все их зависимости также должны быть потокобезопасны. Для достижения этого следует ограничить изменяемое состояние до минимума.</p>
+<p><code>@RequestScoped</code>-объекты не обязательно должны быть синхронизированы. Обычно наличие зависимости от <code>@Singleton</code>- или <code>@SessionScoped</code>-объекты на <code>@RequestScoped</code>-объект — это ошибка проектирования. Если требуется получить объект из более узкой области видимости, следует внедрить провайдер нужного типа (о внедрении провайдеров ниже).</p>
+<h1 id="внедрение-зависимостей-1"><a href="#внедрение-зависимостей-1"><span class="header-section-number">5</span> Внедрение зависимостей</a></h1>
+<p>Паттерн внедрения зависимостей отделяет код поведения от кода разрешения зависимостей. Вместо того, чтобы создавать зависимости явно или с помощью фабрик, класс должен принимать их извне. Этот процесс установки зависимостей в объект называется <em>внедрением</em>.</p>
+<h2 id="способы-внедрения-зависимостей"><a href="#способы-внедрения-зависимостей"><span class="header-section-number">5.1</span> Способы внедрения зависимостей</a></h2>
+<h3 id="внедрение-через-конструктор"><a href="#внедрение-через-конструктор"><span class="header-section-number">5.1.1</span> Внедрение через конструктор</a></h3>
+<p>Внедрение через конструктор совмещает процессы создания объекта и внедрения его зависимостей. Чтобы воспользоваться этим типом внедрения, следует пометить конструктор аннотацией <code>@Inject</code>. Этот конструктор должен принимать в качестве параметров все зависимости класса. Обычно такие конструкторы сразу сохраняют все свои параметры в <code>final</code>-полях объекта:</p>
+<pre class="sourceCode java"><code class="sourceCode java">  <span class="kw">public</span> <span class="kw">class</span> RealBillingService <span class="kw">implements</span> BillingService {
+    <span class="kw">private</span> <span class="dt">final</span> CreditCardProcessor processorProvider;
+    <span class="kw">private</span> <span class="dt">final</span> TransactionLog transactionLogProvider;
+  
+    <span class="fu">@Inject</span>
+    <span class="kw">public</span> <span class="fu">RealBillingService</span>(CreditCardProcessor processorProvider,
+        TransactionLog transactionLogProvider) {
+      <span class="kw">this</span>.<span class="fu">processorProvider</span> = processorProvider;
+      <span class="kw">this</span>.<span class="fu">transactionLogProvider</span> = transactionLogProvider;
+    }
+  }</code></pre>
+<p>Если у класса нет конструктора, помеченного <code>@Inject</code>, Guice воспользуется публичным конструктором без параметров, если он есть. Однако, лучше использовать именно аннотированный конструктор, потому что он служит дополнительной документацией, предоставляя явный список зависимостей класса.</p>
+<p>Внедрение через конструктор очень хорошо работает при модульном тестировании. Если класс принимает все свои зависимости через единственный конструктор, нельзя случайно забыть передать ему какую-то зависимость. При появлении новой зависимости весь клиентский код перестаёт компилироваться, что очень удобно: достаточно исправить ошибки компиляции, и можно быть уверенным, что всё работает правильно.</p>
+<h3 id="внедрение-через-методы"><a href="#внедрение-через-методы"><span class="header-section-number">5.1.2</span> Внедрение через методы</a></h3>
+<p>Для внедрения зависимостей Guice также может пользоваться методами, помеченными <code>@Inject</code>. Зависимости в таком случае передаются через параметры метода; инжектор их автоматически разрешит перед тем, как вызвать метод. Такие методы могут иметь произвольное число параметров, а имя их не влияет на процесс внедрения.</p>
+<pre class="sourceCode java"><code class="sourceCode java">  <span class="kw">public</span> <span class="kw">class</span> PayPalCreditCardProcessor <span class="kw">implements</span> CreditCardProcessor {
+    
+    <span class="kw">private</span> <span class="dt">static</span> <span class="dt">final</span> String DEFAULT_API_KEY = <span class="st">&quot;development-use-only&quot;</span>;
+    
+    <span class="kw">private</span> String apiKey = DEFAULT_API_KEY;
+  
+    <span class="fu">@Inject</span>
+    <span class="kw">public</span> <span class="dt">void</span> <span class="fu">setApiKey</span>(<span class="fu">@Named</span>(<span class="st">&quot;PayPal API key&quot;</span>) String apiKey) {
+      <span class="kw">this</span>.<span class="fu">apiKey</span> = apiKey;
+    }
+  }</code></pre>
+<h3 id="внедрение-в-поля"><a href="#внедрение-в-поля"><span class="header-section-number">5.1.3</span> Внедрение в поля</a></h3>
+<p>Guice может внедрять зависимости непосредственно в поля, помеченные аннотацией <code>@Inject</code>. Это наиболее краткая и выразительная форма объявления зависимостей, но она также и наиболее подвержена проблемам при тестировании.</p>
+<pre class="sourceCode java"><code class="sourceCode java">  <span class="kw">public</span> <span class="kw">class</span> DatabaseTransactionLogProvider <span class="kw">implements</span> Provider&lt;TransactionLog&gt; {
+    <span class="fu">@Inject</span> Connection connection;
+  
+    <span class="kw">public</span> TransactionLog <span class="fu">get</span>() {
+      <span class="kw">return</span> <span class="kw">new</span> <span class="fu">DatabaseTransactionLog</span>(connection);
+    }
+  }</code></pre>
+<p>Следует избегать использования внедрения в <code>final</code>-поля, потому что семантика изменения <code>final</code>-полей плохо определена и может быть различна на разных JVM.</p>
+<h3 id="необязательные-внедрения"><a href="#необязательные-внедрения"><span class="header-section-number">5.1.4</span> Необязательные внедрения</a></h3>
+<p>Иногда бывает удобно пользоваться конкретной зависимостью, если она есть, а если её нет, то использовать некоторый объект по умолчанию. Внедрения в методы или в поля могут быть <em>необязательными</em>, то есть Guice будет их игнорировать, если соответствующие зависимости недоступны. Чтобы воспользоваться необязательным внедрениям, нужно пометить метод или поле аннотацией <code>@Inject(optional=true)</code>:</p>
+<pre class="sourceCode java"><code class="sourceCode java">  <span class="kw">public</span> <span class="kw">class</span> PayPalCreditCardProcessor <span class="kw">implements</span> CreditCardProcessor {
+    <span class="kw">private</span> <span class="dt">static</span> <span class="dt">final</span> String SANDBOX_API_KEY = <span class="st">&quot;development-use-only&quot;</span>;
+  
+    <span class="kw">private</span> String apiKey = SANDBOX_API_KEY;
+  
+    <span class="fu">@Inject</span>(optional=<span class="kw">true</span>)
+    <span class="kw">public</span> <span class="dt">void</span> <span class="fu">setApiKey</span>(<span class="fu">@Named</span>(<span class="st">&quot;PayPal API key&quot;</span>) String apiKey) {
+      <span class="kw">this</span>.<span class="fu">apiKey</span> = apiKey;
+    }
+  }</code></pre>
+<p>Использование одновременно необязательных внедрений и неявных привязок может привести к неожиданному результату. Например, в следующем примере в поле всегда внедряется объект <code>Date</code>, даже если привязка к нему не объявлена явно. Так происходит из-за того, что у <code>Date</code> есть публичный конструктор без параметров, подходящий для неявных привязок.</p>
+<pre class="sourceCode java"><code class="sourceCode java">    <span class="fu">@Inject</span>(optional=<span class="kw">true</span>) Date launchDate;</code></pre>
+<h3 id="внедрение-по-запросу"><a href="#внедрение-по-запросу"><span class="header-section-number">5.1.5</span> Внедрение по запросу</a></h3>
+<p>Внедрения в поля и методы можно совершать для уже существующих объектов, даже не созданных Guice. Для этого используется метод <code>Injector.injectMembers()</code>:</p>
+<pre class="sourceCode java"><code class="sourceCode java">    <span class="kw">public</span> <span class="dt">static</span> <span class="dt">void</span> <span class="fu">main</span>(String[] args) {
+      Injector injector = Guice.<span class="fu">createInjector</span>(...);
+      
+      CreditCardProcessor creditCardProcessor = <span class="kw">new</span> <span class="fu">PayPalCreditCardProcessor</span>();
+      injector.<span class="fu">injectMembers</span>(creditCardProcessor);
+    }</code></pre>
+<h3 id="статические-внедрения"><a href="#статические-внедрения"><span class="header-section-number">5.1.6</span> Статические внедрения</a></h3>
+<p>Guice даёт возможность постепенно мигрировать со статических фабрик на внедрение зависимостей. В этом помогают <em>статические внедрения</em>. Они позволяют объектам участвовать в процессе внедрения зависимостей <em>лишь частично</em>, предоставляя им доступ к внедряемым значениям, но не применяя внедрение к ним самим. Для этого нужно воспользоваться методом <code>requestStaticInjection()</code> в каком-либо модуле, передав в него список классов, которые требуется проинициализировать на этапе создания инжектора:</p>
+<pre class="sourceCode java"><code class="sourceCode java">    <span class="fu">@Override</span> <span class="kw">public</span> <span class="dt">void</span> <span class="fu">configure</span>() {
+      <span class="fu">requestStaticInjection</span>(ProcessorFactory.<span class="fu">class</span>);
+      ...
+    }</code></pre>
+<p>Guice внедрит зависимости в статические члены класса, помеченные <code>@Inject</code>:</p>
+<pre class="sourceCode java"><code class="sourceCode java">  <span class="kw">class</span> ProcessorFactory {
+    <span class="fu">@Inject</span> <span class="dt">static</span> Provider&lt;Processor&gt; processorProvider;
+  
+    <span class="co">/**</span>
+<span class="co">     * </span><span class="kw">@deprecated </span><span class="co">prefer to inject your processor instead.</span>
+<span class="co">     */</span>
+    <span class="fu">@Deprecated</span>
+    <span class="kw">public</span> <span class="dt">static</span> Processor <span class="fu">getInstance</span>() {
+      <span class="kw">return</span> processorProvider.<span class="fu">get</span>();
+    }
+  }</code></pre>
+<p>Статические члены не будут внедряться во время внедрения экземпляров объектов. Этот API не предназначен для постоянного использования, потому что он приводит к тем же проблемам, что и статические фабрики: код с его использованием трудно тестировать, зависимости становятся непрозрачными, а также используется глобальное состояние.</p>
+<h3 id="автоматическое-внедрение"><a href="#автоматическое-внедрение"><span class="header-section-number">5.1.7</span> Автоматическое внедрение</a></h3>
+<p>Guice автоматически внедряет следующие объекты: - объекты, переданные в метод <code>toInstance()</code> в конструкции <code>bind()</code>; - экземпляры провайдеров, переданные в метод <code>toProvider()</code> в конструкции <code>bind()</code>.</p>
+<p>Эти объекты будут внедряться во время создания самого инжектора. Если они нужны для создания других стартовых зависимостей, Guice их внедрит правильным образом.</p>
+<h2 id="внедрение-провайдеров"><a href="#внедрение-провайдеров"><span class="header-section-number">5.2</span> Внедрение провайдеров</a></h2>
+<p>При обычном внедрении зависимостей каждый тип получает в точности один экземпляр каждой из своих зависимостей. Например, <code>RealBillingService</code> получит один <code>CreditCardProcessor</code> и один <code>TransactionLog</code>. Когда требуется большая гибкость, Guice позволяет внедрять <em>провайдеры</em>. Провайдеры создают объект, когда на них вызывается метод <code>get()</code>:</p>
+<pre class="sourceCode java"><code class="sourceCode java">  <span class="kw">public</span> <span class="kw">interface</span> Provider&lt;T&gt; {
+    T <span class="fu">get</span>();
+  }</code></pre>
+<p>Тип провайдера <em>параметризован</em>; это нужно для того, чтобы отличить, например, <code>Provider&lt;TransactionLog&gt;</code> от <code>Provider&lt;CreditCardProcessor&gt;</code>. В любом месте, где используется внедрение объекта, можно вместо этого воспользоваться внедрением провайдера:</p>
+<pre class="sourceCode java"><code class="sourceCode java">  <span class="kw">public</span> <span class="kw">class</span> RealBillingService <span class="kw">implements</span> BillingService {
+    <span class="kw">private</span> <span class="dt">final</span> Provider&lt;CreditCardProcessor&gt; processorProvider;
+    <span class="kw">private</span> <span class="dt">final</span> Provider&lt;TransactionLog&gt; transactionLogProvider;
+  
+    <span class="fu">@Inject</span>
+    <span class="kw">public</span> <span class="fu">RealBillingService</span>(Provider&lt;CreditCardProcessor&gt; processorProvider,
+        Provider&lt;TransactionLog&gt; transactionLogProvider) {
+      <span class="kw">this</span>.<span class="fu">processorProvider</span> = processorProvider;
+      <span class="kw">this</span>.<span class="fu">transactionLogProvider</span> = transactionLogProvider;
+    }
+  
+    <span class="kw">public</span> Receipt <span class="fu">chargeOrder</span>(PizzaOrder order, CreditCard creditCard) {
+      CreditCardProcessor processor = processorProvider.<span class="fu">get</span>();
+      TransactionLog transactionLog = transactionLogProvider.<span class="fu">get</span>();
+  
+      <span class="co">/* use the processor and transaction log here */</span>
+    }
+  }</code></pre>
+<p>Это возможно, так как для каждой привязки, как аннотированной, так и нет, создаётся неявная привязка для провайдера.</p>
+<h3 id="провайдеры-для-создания-нескольких-объектов"><a href="#провайдеры-для-создания-нескольких-объектов"><span class="header-section-number">5.2.1</span> Провайдеры для создания нескольких объектов</a></h3>
+<p>Провайдеры можно использовать, когда требуется создать несколько объектов одного типа. Пусть приложение сохраняет запись с итогом и деталями операции, когда оплата за пиццу не проходит. С помощью провайдеров можно создавать новые записи тогда, когда это нужно:</p>
+<pre class="sourceCode java"><code class="sourceCode java">  <span class="kw">public</span> <span class="kw">class</span> LogFileTransactionLog <span class="kw">implements</span> TransactionLog {
+  
+    <span class="kw">private</span> <span class="dt">final</span> Provider&lt;LogFileEntry&gt; logFileProvider;
+  
+    <span class="fu">@Inject</span>
+    <span class="kw">public</span> <span class="fu">LogFileTransactionLog</span>(Provider&lt;LogFileEntry&gt; logFileProvider) {
+      <span class="kw">this</span>.<span class="fu">logFileProvider</span> = logFileProvider;
+    }
+  
+    <span class="kw">public</span> <span class="dt">void</span> <span class="fu">logChargeResult</span>(ChargeResult result) {
+      LogFileEntry summaryEntry = logFileProvider.<span class="fu">get</span>();
+      summaryEntry.<span class="fu">setText</span>(<span class="st">&quot;Charge &quot;</span> + (result.<span class="fu">wasSuccessful</span>() ? <span class="st">&quot;success&quot;</span> : <span class="st">&quot;failure&quot;</span>));
+      summaryEntry.<span class="fu">save</span>();
+  
+      <span class="kw">if</span> (!result.<span class="fu">wasSuccessful</span>()) {
+        LogFileEntry detailEntry = logFileProvider.<span class="fu">get</span>();
+        detailEntry.<span class="fu">setText</span>(<span class="st">&quot;Failure result: &quot;</span> + result);
+        detailEntry.<span class="fu">save</span>();
+      }
+    }
+  }</code></pre>
+<h3 id="провайдеры-для-ленивой-инициализации"><a href="#провайдеры-для-ленивой-инициализации"><span class="header-section-number">5.2.2</span> Провайдеры для ленивой инициализации</a></h3>
+<p>Если у какого-то класса есть зависимость, которую достаточно дорого создавать, можно воспользоваться провайдером, чтобы отложить этот процесс до того момента, когда это понадобится. Это особенно полезно, если такая зависимость используется не всегда.</p>
+<pre class="sourceCode java"><code class="sourceCode java">  <span class="kw">public</span> <span class="kw">class</span> DatabaseTransactionLog <span class="kw">implements</span> TransactionLog {
+    
+    <span class="kw">private</span> <span class="dt">final</span> Provider&lt;Connection&gt; connectionProvider;
+  
+    <span class="fu">@Inject</span>
+    <span class="kw">public</span> <span class="fu">DatabaseTransactionLog</span>(Provider&lt;Connection&gt; connectionProvider) {
+      <span class="kw">this</span>.<span class="fu">connectionProvider</span> = connectionProvider;
+    }
+  
+    <span class="kw">public</span> <span class="dt">void</span> <span class="fu">logChargeResult</span>(ChargeResult result) {
+      <span class="co">/* only write failed charges to the database */</span>
+      <span class="kw">if</span> (!result.<span class="fu">wasSuccessful</span>()) {
+        Connection connection = connectionProvider.<span class="fu">get</span>();
+      }
+    }
+  }</code></pre>
+<h3 id="провайдеры-для-доступа-к-более-узким-областям-видимости"><a href="#провайдеры-для-доступа-к-более-узким-областям-видимости"><span class="header-section-number">5.2.3</span> Провайдеры для доступа к более узким областям видимости</a></h3>
+<p>Зависимость класса из более широкой области видимости на класс из более узкой ошибочна. Если, например, лог транзакций — это синглтон, которому для работы требуется знать текущего пользователя, и если внедрить объект, представляющий пользователя, непосредственно в лог транзакций, то программа не будет работать, потому что для каждого запроса пользователь может быть разный, а в лог внедрение делается только один раз. Поскольку провайдеры могут создавать значения только по необходимости, с их помощью можно безопасно получать доступ к более узкой области видимости:</p>
+<pre class="sourceCode java"><code class="sourceCode java">  <span class="fu">@Singleton</span>
+  <span class="kw">public</span> <span class="kw">class</span> ConsoleTransactionLog <span class="kw">implements</span> TransactionLog {
+    
+    <span class="kw">private</span> <span class="dt">final</span> AtomicInteger failureCount = <span class="kw">new</span> AtomicInteger();
+    <span class="kw">private</span> <span class="dt">final</span> Provider&lt;User&gt; userProvider;
+  
+    <span class="fu">@Inject</span>
+    <span class="kw">public</span> <span class="fu">ConsoleTransactionLog</span>(Provider&lt;User&gt; userProvider) {
+      <span class="kw">this</span>.<span class="fu">userProvider</span> = userProvider;
+    }
+  
+    <span class="kw">public</span> <span class="dt">void</span> <span class="fu">logConnectException</span>(UnreachableException e) {
+      failureCount.<span class="fu">incrementAndGet</span>();
+      User user = userProvider.<span class="fu">get</span>();
+      System.<span class="fu">out</span>.<span class="fu">println</span>(<span class="st">&quot;Connection failed for &quot;</span> + user + <span class="st">&quot;: &quot;</span> + e.<span class="fu">getMessage</span>());
+      System.<span class="fu">out</span>.<span class="fu">println</span>(<span class="st">&quot;Failure count: &quot;</span> + failureCount.<span class="fu">incrementAndGet</span>());
+    }
+  }</code></pre>
+        </div>
+        <div class="footer">
+            Copyright © 2012-2013 Vladimir Matveev
+            <br>
+            Generated with <a href="http://jaspervdj.be/hakyll/">hakyll</a>
+        </div>
+    </div>
+</body>
+</html>
