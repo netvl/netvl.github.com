@@ -396,8 +396,8 @@ fn unwrap_or<T>(opt: Option<T>, default: T) -> T {
     }
 }
 
-println!("{}", unwrap_or(Some(10), 20));  // 10
-println!("{}", unwrap_or(None, 30));      // 30
+println!("{}", unwrap_or(Some(10), 20));   // 10
+println!("{}", unwrap_or(None, "abcde"));  // abcde
 ```
 
 ---
@@ -418,8 +418,8 @@ impl<T> Option<T> {
     }
 }
 
-println!("{}", Some(10).unwrap_or(20));  // 10
-println!("{}", None.unwrap_or(30));      // 30
+println!("{}", Some(10).unwrap_or(20));   // 10
+println!("{}", None.unwrap_or("abcde"));  // abcde
 ```
 
 ---
@@ -649,7 +649,7 @@ fn with_one(num: &int) -> int {
 
 let x = box 5i;
 
-println!("{}", with_one(&x));  // 6
+println!("{}", with_one(&*x));  // 6
 ```
 
 ---
@@ -874,6 +874,8 @@ spawn(move || {  // unboxed closure
 ```
 
 Потоки — это потоки ОС.
+
+Система типов гарантирует, что замыкание не захватит «опасные» переменные.
 
 ---
 
