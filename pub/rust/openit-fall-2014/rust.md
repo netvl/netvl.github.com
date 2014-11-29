@@ -704,7 +704,7 @@ let e = &*num;
 let mut v = vec![1i, 2, 3];
 for &e in v.iter() {
     println!("{}", e);
-*    if e == 2 { v.push(-42); }  // ! cannot borrow v as mutable
+*   if e == 2 { v.push(-42); }  // ! cannot borrow v as mutable
 }
 ```
 
