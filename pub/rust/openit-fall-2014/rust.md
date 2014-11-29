@@ -1115,6 +1115,9 @@ class: center, middle
   - https://crates.io/
   - irc.mozilla.org - #rust, #rust-internals, #cargo, #servo, ...
   - https://groups.google.com/forum/#!forum/rust-russian
+  - http://blog.rust-lang.org/
+    + http://habrahabr.ru/post/237199/
+    + http://habrahabr.ru/post/243315/
 * Документация и туториалы
   - Stackoverflow по тегу \[rust\]
   - http://doc.rust-lang.org/guide.html
